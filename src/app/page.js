@@ -1,66 +1,68 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+// Home page: a single URL input that kicks off a scan.
+// Plain GET form -> /scan?url=...&deep=... so it works without client JS.
+
+import Link from "next/link";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import ThemeToggle from "@/components/theme-toggle";
 
 export default function Home() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.js file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="min-h-screen">
+      <header className="flex h-14 items-center justify-between border-b px-6">
+        <span className="font-bold tracking-tight">🔎 Meta Tag</span>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/tools"
+            className="text-sm font-medium text-muted-foreground no-underline hover:text-foreground"
+          >
+            Free tools
+          </Link>
+          <ThemeToggle />
+        </div>
+      </header>
+
+      <div className="container">
+        <div className="hero">
+          <h1 className="text-4xl font-bold tracking-tight">
+            Audit any website&rsquo;s SEO
+          </h1>
+          <p className="max-w-xl text-muted-foreground">
+            Enter a URL. We read its sitemap, then grade each page&rsquo;s title,
+            meta description, Open Graph, Twitter/X card, canonical, AI-search
+            readiness, and more.
           </p>
+
+          <Card className="mt-6 w-full max-w-xl">
+            <CardContent>
+              <form action="/scan" method="get" className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Input
+                    type="text"
+                    inputMode="url"
+                    name="url"
+                    placeholder="example.com"
+                    required
+                    autoComplete="url"
+                    aria-label="Website URL"
+                    className="h-11 flex-1 text-base"
+                  />
+                  <Button type="submit" size="lg" className="h-11 px-6 text-base">
+                    Run audit
+                  </Button>
+                </div>
+                <Label className="flex items-center justify-center gap-2 font-normal text-muted-foreground">
+                  <Checkbox name="deep" value="1" />
+                  Also run a deep scan to find pages missing from the sitemap
+                </Label>
+              </form>
+            </CardContent>
+          </Card>
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </div>
     </div>
   );
 }
