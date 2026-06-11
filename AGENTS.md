@@ -10,7 +10,7 @@ A per-URL SEO + AI-search auditor with a Semrush-style dashboard. **JavaScript, 
 
 ## How it works
 
-`src/lib/seo/analyze.js#runScan(url, {deepScan})` is the orchestrator. It runs **synchronously per request** (no DB/jobs yet, capped at `MAX_PAGES_SYNC = 40`) and returns one `result` object that every UI panel + export consumes unchanged:
+`src/lib/seo/analyze.js#runScan(url, {deepScan})` is the orchestrator. It runs **synchronously per request** (no background jobs yet, capped at `MAX_PAGES_SYNC = 40`) and returns one `result` object that every UI panel + export consumes unchanged:
 
 ```
 fetchSitemap + fetchAiSiteContext → analyze each page (fetch → extract → score)
@@ -18,9 +18,11 @@ fetchSitemap + fetchAiSiteContext → analyze each page (fetch → extract → s
 → { rootUrl, sitemap, pages[{url, signals, audit, aiAudit, ...}], aiReadiness, analytics, headless, ... }
 ```
 
-Library modules (`src/lib/seo/`): `safe-fetch` (SSRF-guarded fetch — use for ALL outbound requests), `sitemap`, `crawl`, `headless` (puppeteer-core), `extract` (cheerio → signals), `rules` (classic SEO scoring), `ai-rules` (AEO/GEO/AIO/AGO), `ai-site` (llms.txt/ai.txt validation + AI-bot policy), `trackers`, `generate` (sitemap/llms/robots/ai.txt), `explanations` (plain-language per ruleKey), `gamify` (issue grouping). AI calls go through the Vercel AI Gateway (`src/lib/ai/suggest-fixes.js`, `api/generate/llms-ai`, `api/ai-fix`).
+After the scan, `scan/page.js` calls `saveScan(result)` (best-effort) to persist it to Neon and get a share token.
 
-UI (`src/app/scan/`): `scan-dashboard.js` (SidebarProvider + section state) + `app-sidebar.js` + one `*-panel.js` per section. Standalone generators in `src/app/tools/`.
+Library modules (`src/lib/seo/`): `safe-fetch` (SSRF-guarded fetch — use for ALL outbound requests), `sitemap`, `crawl`, `headless` (puppeteer-core / Browserbase), `extract` (cheerio → signals), `rules` (classic SEO scoring), `ai-rules` (AEO/GEO/AIO/AGO), `ai-site` (llms.txt/ai.txt validation + AI-bot policy), `trackers`, `generate` (sitemap/llms/robots/ai.txt), `explanations` (plain-language per ruleKey), `gamify` (issue grouping). Persistence: `src/lib/db.js` (Neon client, null when `DATABASE_URL` unset) + `src/lib/db/scans.js` (`saveScan`/`getScanByToken`/`recentScans`). AI calls go through the Vercel AI Gateway (`src/lib/ai/suggest-fixes.js`, `api/generate/llms-ai`, `api/ai-fix`).
+
+UI (`src/app/scan/`): `scan-dashboard.js` (SidebarProvider + section state) + `app-sidebar.js` + one `*-panel.js` per section. Saved/shared reports at `src/app/r/[token]/`, scan history at `src/app/history/`. Standalone generators in `src/app/tools/`. Product analytics via `src/components/posthog-provider.js` (mounted in `layout.js`).
 
 ## Conventions
 
@@ -36,9 +38,12 @@ UI (`src/app/scan/`): `scan-dashboard.js` (SidebarProvider + section state) + `a
 - **Turbopack dev serves stale CSS** after external edits (e.g. `sed`). After changing tokens/CSS, `rm -rf .next` and restart, then verify computed styles.
 - **Tailwind v4 Preflight** already resets margins/box-sizing — no manual `* {}` reset. Buttons get `cursor: pointer` from an `@layer base` rule (Preflight v4 dropped it).
 - The **`DEP0205` deprecation** warning comes from `@tailwindcss/node` and is suppressed via `NODE_OPTIONS=--disable-warning=DEP0205` in the npm scripts — keep that.
-- `puppeteer-core` is in `next.config.mjs` `serverExternalPackages`. Headless only runs when `BROWSER_WS_ENDPOINT` or `CHROME_EXECUTABLE_PATH` is set; otherwise the scan stays fetch-only and flags `needsHeadless`.
+- `puppeteer-core` is in `next.config.mjs` `serverExternalPackages`. Headless runs when `BROWSER_WS_ENDPOINT`, `CHROME_EXECUTABLE_PATH`, or `BROWSERBASE_API_KEY`+`BROWSERBASE_PROJECT_ID` is set (Browserbase creates a session → `puppeteer.connect`); otherwise the scan stays fetch-only and flags `needsHeadless`. Escalation cap `MAX_HEADLESS = 5`.
 - **Keyless PageSpeed Insights 429s** (shared quota) — Performance needs `PAGESPEED_API_KEY`.
 - AI features work locally with `AI_GATEWAY_API_KEY` and in prod via Vercel OIDC. Always fetch current gateway model IDs (`curl https://ai-gateway.vercel.sh/v1/models`) — don't hardcode from memory.
+- **Persistence is best-effort**: all `src/lib/db/*` calls no-op (return null/`[]`) when `DATABASE_URL` is unset, so scans still work without a DB. Schema lives in `db/schema.sql`; apply it once with `node --env-file=.env.local scripts/migrate.mjs` (uses `DATABASE_URL_UNPOOLED`). Runtime only needs `DATABASE_URL`.
+- **PostHog env vars are oddly lowercased**: `NEXT_PUBLIC_superengine_POSTHOG_PROJECT_TOKEN` / `_HOST` (the `superengine` segment is literal — Next inlines `NEXT_PUBLIC_*`). The provider no-ops cleanly without a token. Key events: `scan_run`, `share_created`, `ai_fix_used`, `generator_downloaded`, `performance_test_run`.
+- **Vercel env gotcha**: the Neon Marketplace integration's `POSTGRES_*` vars were NOT auto-wired to the project — `DATABASE_URL` + `BROWSERBASE_*` + `NEXT_PUBLIC_superengine_POSTHOG_*` were added manually (production + development). Preview env is unset (CLI 54.9.1 ignores `--yes` on the all-branches path; upgrade to 54.12.1+).
 
 ## Verify changes
 
@@ -46,4 +51,6 @@ UI (`src/app/scan/`): `scan-dashboard.js` (SidebarProvider + section state) + `a
 
 ## Not built yet
 
-Neon persistence (scan history, shareable links, monitoring-over-time), durable background jobs for large sites, and **GBP Monitor + GSC Insights** (both need a Google OAuth client + the user's owned property; GBP additionally needs Google's gated Business Profile API approval). See `~/.claude/plans/` and project memory for the current plan.
+Monitoring-over-time (scheduled re-scans), durable background jobs for large sites, PDF reports, and **GBP Monitor + GSC Insights** (both need a Google OAuth client + the user's owned property; GBP additionally needs Google's gated Business Profile API approval). See `~/.claude/plans/` and project memory for the current plan.
+
+*(Shipped: Neon persistence — save / share `/r/[token]` / `/history`; Browserbase headless in prod; PostHog analytics.)*

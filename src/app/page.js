@@ -16,6 +16,12 @@ export default function Home() {
         <span className="font-bold tracking-tight">🔎 Meta Tag</span>
         <div className="flex items-center gap-4">
           <Link
+            href="/history"
+            className="text-sm font-medium text-muted-foreground no-underline hover:text-foreground"
+          >
+            History
+          </Link>
+          <Link
             href="/tools"
             className="text-sm font-medium text-muted-foreground no-underline hover:text-foreground"
           >

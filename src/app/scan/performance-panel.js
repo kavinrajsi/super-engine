@@ -4,6 +4,7 @@
 // slow the main scan.
 
 import { useState } from "react";
+import { usePostHog } from "posthog-js/react";
 import {
   Card,
   CardAction,
@@ -31,6 +32,7 @@ const SCORES = [
 ];
 
 export default function PerformancePanel({ url }) {
+  const ph = usePostHog();
   const [strategy, setStrategy] = useState("mobile");
   const [state, setState] = useState("idle"); // idle | loading | done | error
   const [data, setData] = useState(null);
@@ -49,6 +51,11 @@ export default function PerformancePanel({ url }) {
       if (!res.ok) throw new Error("Request failed");
       setData(json);
       setState("done");
+      ph?.capture("performance_test_run", {
+        url,
+        strategy: strat,
+        performance: json.scores?.performance ?? null,
+      });
     } catch (e) {
       setError(e.message);
       setState("error");

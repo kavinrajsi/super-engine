@@ -6,6 +6,7 @@
 import Link from "next/link";
 import { assertSafeUrl } from "@/lib/seo/safe-fetch";
 import { runScan } from "@/lib/seo/analyze";
+import { saveScan } from "@/lib/db/scans";
 import ScanDashboard from "./scan-dashboard";
 
 export const metadata = { title: "Scan results — Meta Tag" };
@@ -48,11 +49,20 @@ export default async function ScanPage({ searchParams }) {
 
   const q = `url=${encodeURIComponent(safe.toString())}${deepScan ? "&deep=1" : ""}`;
 
+  // Persist the scan (best-effort) so it can be shared and listed in history.
+  let shareToken = null;
+  try {
+    shareToken = await saveScan(result);
+  } catch {
+    /* DB unavailable — continue without a share link */
+  }
+
   return (
     <ScanDashboard
       result={result}
       exportHref={`/api/export?${q}`}
       reportHref={`/api/report?${q}`}
+      shareToken={shareToken}
     />
   );
 }

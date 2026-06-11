@@ -4,11 +4,13 @@
 // and renders model-generated, copy-paste-ready suggestions.
 
 import { useState } from "react";
+import { usePostHog } from "posthog-js/react";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 export default function AiFix({ page }) {
+  const ph = usePostHog();
   const [state, setState] = useState("idle"); // idle | loading | done | error
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
@@ -33,6 +35,10 @@ export default function AiFix({ page }) {
       if (!res.ok) throw new Error(json.error || "Request failed");
       setData(json);
       setState("done");
+      ph?.capture("ai_fix_used", {
+        url: page.url,
+        suggestions: json.suggestions?.length ?? 0,
+      });
     } catch (e) {
       setError(e.message);
       setState("error");

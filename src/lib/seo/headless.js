@@ -13,7 +13,11 @@ const NAV_TIMEOUT_MS = 15_000;
 const USER_AGENT = "MetaTagSEOBot/0.1 (+headless; on-page SEO audit)";
 
 export function isHeadlessAvailable() {
-  return !!(process.env.BROWSER_WS_ENDPOINT || process.env.CHROME_EXECUTABLE_PATH);
+  return !!(
+    process.env.BROWSER_WS_ENDPOINT ||
+    process.env.CHROME_EXECUTABLE_PATH ||
+    (process.env.BROWSERBASE_API_KEY && process.env.BROWSERBASE_PROJECT_ID)
+  );
 }
 
 // Render a URL in a real browser and return the fully-rendered HTML, or null if
@@ -33,11 +37,19 @@ export async function renderHtml(url) {
     return null;
   }
 
-  const remote = process.env.BROWSER_WS_ENDPOINT;
+  // Resolve a connect endpoint: explicit CDP URL, or a fresh Browserbase session.
+  let connectUrl = process.env.BROWSER_WS_ENDPOINT || null;
   let browser = null;
   try {
-    browser = remote
-      ? await puppeteer.connect({ browserWSEndpoint: remote })
+    if (!connectUrl && process.env.BROWSERBASE_API_KEY && process.env.BROWSERBASE_PROJECT_ID) {
+      const { default: Browserbase } = await import("@browserbasehq/sdk");
+      const bb = new Browserbase({ apiKey: process.env.BROWSERBASE_API_KEY });
+      const session = await bb.sessions.create({ projectId: process.env.BROWSERBASE_PROJECT_ID });
+      connectUrl = session.connectUrl;
+    }
+
+    browser = connectUrl
+      ? await puppeteer.connect({ browserWSEndpoint: connectUrl })
       : await puppeteer.launch({
           executablePath: process.env.CHROME_EXECUTABLE_PATH,
           headless: true,
@@ -55,7 +67,7 @@ export async function renderHtml(url) {
   } finally {
     if (browser) {
       try {
-        if (remote) await browser.disconnect();
+        if (connectUrl) await browser.disconnect();
         else await browser.close();
       } catch {
         /* ignore teardown errors */

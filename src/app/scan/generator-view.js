@@ -4,12 +4,14 @@
 // optional "Enhance with AI" that polishes the file via the AI Gateway.
 
 import { useState } from "react";
+import { usePostHog } from "posthog-js/react";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Copy, Download, Sparkles, Undo2 } from "lucide-react";
 
 export default function GeneratorView({ title, filename, mime, content, enhanceable, site }) {
+  const ph = usePostHog();
   const [current, setCurrent] = useState(content);
   const [enhanced, setEnhanced] = useState(false);
   const [enhancing, setEnhancing] = useState(false);
@@ -30,6 +32,7 @@ export default function GeneratorView({ title, filename, mime, content, enhancea
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
+    ph?.capture("generator_downloaded", { filename, enhanced });
   }
 
   async function enhance() {

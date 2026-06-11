@@ -2,15 +2,17 @@
 
 // Dashboard shell: sidebar + sticky header + the active section panel.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePostHog } from "posthog-js/react";
+import { Check, Share2 } from "lucide-react";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import AppSidebar from "./app-sidebar";
 import OverviewPanel from "./overview-panel";
 import PagesPanel from "./pages-panel";
@@ -20,13 +22,45 @@ import TrackingPanel from "./tracking-panel";
 import GeneratorsPanel from "./generators-panel";
 import PerformancePanel from "./performance-panel";
 
-export default function ScanDashboard({ result, exportHref, reportHref }) {
+function ShareButton({ shareToken }) {
+  const ph = usePostHog();
+  const [copied, setCopied] = useState(false);
+  if (!shareToken) return null;
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => {
+        navigator.clipboard?.writeText(`${window.location.origin}/r/${shareToken}`);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+        ph?.capture("share_created", { token: shareToken });
+      }}
+    >
+      {copied ? <Check /> : <Share2 />}
+      {copied ? "Link copied" : "Share"}
+    </Button>
+  );
+}
+
+export default function ScanDashboard({ result, exportHref, reportHref, shareToken }) {
   const [active, setActive] = useState("ai");
+  const ph = usePostHog();
 
   const issueCount = result.pages.reduce(
     (n, p) => n + (p.audit ? p.audit.counts.error + p.audit.counts.warning : 0),
     0
   );
+
+  useEffect(() => {
+    ph?.capture("scan_run", {
+      url: result.rootUrl,
+      siteScore: result.siteScore,
+      aiOverall: result.aiReadiness?.overall,
+      pages: result.pages.length,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <SidebarProvider>
@@ -44,6 +78,7 @@ export default function ScanDashboard({ result, exportHref, reportHref }) {
           <a href={reportHref} className={buttonVariants({ variant: "outline", size: "sm" })}>
             JSON
           </a>
+          <ShareButton shareToken={shareToken} />
           <Link href="/" className={buttonVariants({ size: "sm" })}>
             New scan
           </Link>
