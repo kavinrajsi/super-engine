@@ -21,6 +21,7 @@ import AiReadinessPanel from "./ai-readiness-panel";
 import TrackingPanel from "./tracking-panel";
 import GeneratorsPanel from "./generators-panel";
 import PerformancePanel from "./performance-panel";
+import AccessibilityPanel from "./accessibility-panel";
 
 function ShareButton({ shareToken }) {
   const ph = usePostHog();
@@ -90,6 +91,7 @@ export default function ScanDashboard({ result, exportHref, reportHref, shareTok
           {active === "issues" && <IssuesPanel result={result} />}
           {active === "ai" && <AiReadinessPanel readiness={result.aiReadiness} />}
           {active === "performance" && <PerformancePanel url={result.rootUrl} />}
+          {active === "accessibility" && <AccessibilityPanel result={result} />}
           {active === "tracking" && <TrackingPanel analytics={result.analytics} />}
           {active === "generators" && <GeneratorsPanel result={result} />}
         </main>
