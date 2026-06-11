@@ -43,10 +43,11 @@ export async function GET(request) {
         res.status === 429 || /quota/i.test(raw)
           ? "PageSpeed's keyless daily quota is exhausted. Add a free PAGESPEED_API_KEY (Google Cloud → enable PageSpeed Insights API → create API key) to enable performance tests."
           : raw || `PageSpeed API error (${res.status})`;
-      return Response.json({ error: msg }, { status: 502 });
+      // 200 with an error body — client-handled, keeps the browser console clean.
+      return Response.json({ error: msg });
     }
   } catch (err) {
-    return Response.json({ error: `Could not reach PageSpeed Insights: ${err.message}` }, { status: 502 });
+    return Response.json({ error: `Could not reach PageSpeed Insights: ${err.message}` });
   }
 
   const cats = data.lighthouseResult?.categories || {};

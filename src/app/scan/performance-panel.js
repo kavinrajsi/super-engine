@@ -45,7 +45,8 @@ export default function PerformancePanel({ url }) {
         `/api/pagespeed?url=${encodeURIComponent(url)}&strategy=${strat}`
       );
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Request failed");
+      if (json.error) throw new Error(json.error);
+      if (!res.ok) throw new Error("Request failed");
       setData(json);
       setState("done");
     } catch (e) {
