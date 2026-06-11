@@ -1,7 +1,8 @@
 "use client";
 
-// Issues: every issue across the site, de-duplicated by rule and grouped by
-// category in an accordion. Read-only, prioritized view.
+// Issues: every issue across the site, grouped by category and de-duplicated by
+// rule. Each rule lists the pages it affects, with the actual offending content
+// on each page. Read-only, prioritized view.
 
 import {
   Accordion,
@@ -10,11 +11,14 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { questsFromIssues } from "@/lib/seo/gamify";
+import { groupIssuesWithPages } from "@/lib/seo/gamify";
 import { explain } from "@/lib/seo/explanations";
 
 const SEV_BADGE = { error: "destructive", warning: "secondary", info: "outline" };
 const SEV_ORDER = { error: 0, warning: 1, info: 2 };
+
+// How many affected pages to list per rule before collapsing to "+N more".
+const MAX_PAGES_SHOWN = 25;
 
 const CATEGORIES = [
   { key: "seo", label: "SEO" },
@@ -25,12 +29,55 @@ const CATEGORIES = [
   { key: "ago", label: "Agent Access (AGO)" },
 ];
 
+function prettyUrl(url) {
+  try {
+    const u = new URL(url);
+    return u.pathname === "/" && !u.search ? u.host : u.host + u.pathname + u.search;
+  } catch {
+    return url;
+  }
+}
+
+function AffectedPages({ occurrences }) {
+  const shown = occurrences.slice(0, MAX_PAGES_SHOWN);
+  const more = occurrences.length - shown.length;
+  return (
+    <div className="mt-3 rounded-md border bg-muted/30 p-3">
+      <div className="mb-2 text-xs font-medium text-foreground">
+        Affected page{occurrences.length === 1 ? "" : "s"} ({occurrences.length})
+      </div>
+      <ul className="space-y-1.5">
+        {shown.map((o, i) => (
+          <li key={i} className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-3">
+            <a
+              href={o.url}
+              target="_blank"
+              rel="noreferrer"
+              title={o.url}
+              className="shrink-0 truncate font-mono text-xs text-primary hover:underline sm:max-w-[16rem]"
+            >
+              {prettyUrl(o.url)}
+            </a>
+            {o.evidence && (
+              <span
+                title={o.evidence}
+                className="min-w-0 truncate text-xs text-muted-foreground"
+              >
+                &ldquo;{o.evidence}&rdquo;
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+      {more > 0 && (
+        <div className="mt-1.5 text-xs text-muted-foreground">+{more} more</div>
+      )}
+    </div>
+  );
+}
+
 export default function IssuesPanel({ result }) {
-  const allIssues = result.pages.flatMap((p) => [
-    ...(p.audit?.issues || []),
-    ...(p.aiAudit?.issues || []),
-  ]);
-  const grouped = questsFromIssues(allIssues);
+  const grouped = groupIssuesWithPages(result.pages);
 
   const byCategory = CATEGORIES.map((c) => ({
     ...c,
@@ -70,11 +117,9 @@ export default function IssuesPanel({ result }) {
                         {q.severity}
                       </Badge>
                       <div className="min-w-0 flex-1 text-sm font-medium">{q.title}</div>
-                      {q.pagesAffected > 1 && (
-                        <span className="shrink-0 text-xs text-muted-foreground">
-                          {q.pagesAffected} pages
-                        </span>
-                      )}
+                      <span className="shrink-0 text-xs text-muted-foreground">
+                        {q.occurrences.length} page{q.occurrences.length === 1 ? "" : "s"}
+                      </span>
                     </div>
                     <div className="mt-2 space-y-1 text-xs leading-relaxed">
                       {exp.what && (
@@ -96,6 +141,7 @@ export default function IssuesPanel({ result }) {
                         </p>
                       )}
                     </div>
+                    <AffectedPages occurrences={q.occurrences} />
                   </div>
                 );
               })}
