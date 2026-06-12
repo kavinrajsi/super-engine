@@ -28,10 +28,10 @@ export default function Home() {
             Search Console
           </Link>
           <Link
-            href="/tools"
+            href="/google-updates"
             className="text-sm font-medium text-muted-foreground no-underline hover:text-foreground"
           >
-            Free tools
+            Algorithm updates
           </Link>
           <ThemeToggle />
         </div>

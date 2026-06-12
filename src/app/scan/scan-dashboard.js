@@ -19,7 +19,6 @@ import PagesPanel from "./pages-panel";
 import IssuesPanel from "./issues-panel";
 import AiReadinessPanel from "./ai-readiness-panel";
 import TrackingPanel from "./tracking-panel";
-import GeneratorsPanel from "./generators-panel";
 import PerformancePanel from "./performance-panel";
 
 function ShareButton({ shareToken }) {
@@ -91,7 +90,6 @@ export default function ScanDashboard({ result, exportHref, reportHref, shareTok
           {active === "ai" && <AiReadinessPanel readiness={result.aiReadiness} />}
           {active === "performance" && <PerformancePanel url={result.rootUrl} />}
           {active === "tracking" && <TrackingPanel analytics={result.analytics} />}
-          {active === "generators" && <GeneratorsPanel result={result} />}
         </main>
       </SidebarInset>
     </SidebarProvider>

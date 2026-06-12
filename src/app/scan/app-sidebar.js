@@ -14,7 +14,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, FileText, ListChecks, Bot, Activity, FileCode2, Gauge } from "lucide-react";
+import { LayoutDashboard, FileText, ListChecks, Bot, Activity, Gauge } from "lucide-react";
 import ThemeToggle from "@/components/theme-toggle";
 
 const NAV = [
@@ -24,7 +24,6 @@ const NAV = [
   { key: "issues", label: "Issues", icon: ListChecks },
   { key: "performance", label: "Performance", icon: Gauge },
   { key: "tracking", label: "Tracking", icon: Activity },
-  { key: "generators", label: "Generators", icon: FileCode2 },
 ];
 
 export default function AppSidebar({ active, onSelect, issueCount = 0 }) {

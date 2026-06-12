@@ -1,6 +1,6 @@
 # Meta Tag — SEO & AI-Search Audit
 
-A clean, Semrush-style SEO auditor that also grades a site for **AI search** (ChatGPT, Google AI Overviews, Perplexity). Enter a URL → it reads the sitemap, crawls pages, and reports on-page SEO, social tags, AI-readiness, trackers, performance, and more — with one-click AI fixes and publish-ready file generators.
+A clean, Semrush-style SEO auditor that also grades a site for **AI search** (ChatGPT, Google AI Overviews, Perplexity). Enter a URL → it reads the sitemap, crawls pages, and reports on-page SEO, social tags, AI-readiness, trackers, performance, and more — with one-click AI fixes.
 
 **Live:** https://superengine.vercel.app
 
@@ -11,12 +11,11 @@ A clean, Semrush-style SEO auditor that also grades a site for **AI search** (Ch
 - **Sitemap discovery & crawl** — robots.txt hints + `/sitemap.xml`, nested `sitemapindex`, and a hybrid crawl (fast fetch with optional **headless** escalation for JS-rendered pages).
 - **Tracker / heatmap detection** — Microsoft Clarity (with project ID), GA4, GTM, Hotjar, FullStory, **Meta Pixel / Facebook SDK / domain-verification**, and ~20 more.
 - **AI-powered fixes** — rewrite titles/descriptions, generate OG/FAQ schema (Vercel AI Gateway).
-- **Generators** — `sitemap.xml`, `llms.txt` (with optional AI enhance), `robots.txt`, `ai.txt` — in the dashboard and as standalone tools at `/tools`.
 - **Site speed & performance** — Lighthouse scores, Core Web Vitals, and optimization tips via Google PageSpeed Insights.
 - **Save, share & history** — every scan is persisted to Postgres (Neon); each gets a shareable `/r/[token]` link that reopens the saved report without re-scanning, and `/history` lists recent scans.
 - **Search Console insights** — connect Google Search Console (per-visitor OAuth) at `/search-console` to see top queries & pages, clicks/impressions/CTR/position with period-over-period deltas, a trend chart, and striking-distance (position 5–20) opportunities.
 - **Exports** — CSV and JSON; shareable report data.
-- **Dashboard** — sidebar sections (AI Readiness · Overview · Pages · Issues · Performance · Tracking · Generators), orange theme, light/dark mode.
+- **Dashboard** — sidebar sections (AI Readiness · Overview · Pages · Issues · Performance · Tracking), orange theme, light/dark mode.
 
 ## Tech stack
 
@@ -64,18 +63,18 @@ Add on Vercel with `vercel env add <NAME>`.
 ```
 src/
   app/
-    page.js              Home (URL input + History / Free tools links)
+    page.js              Home (URL input + History / Search Console / Algorithm updates links)
     layout.js            Root layout (next-themes + PostHog provider)
     globals.css          Tailwind v4 + theme tokens (orange accent)
     scan/                Dashboard: scan-dashboard, app-sidebar, *-panel.js, score-ring, og-preview, ai-fix
     r/[token]/           Saved/shared report (read from Neon, no re-scan)
     history/             Recent scans list
     search-console/      Google Search Console insights (per-visitor OAuth)
-    tools/               Standalone generators (/tools, /tools/sitemap|llms|robots|ai-txt)
-    api/                 export, report, ai-fix, pagespeed, generate/llms-ai
+    google-updates/      Google algorithm-update timeline
+    api/                 export, report, ai-fix, pagespeed
   lib/
     seo/                 analyze (orchestrator), sitemap, crawl, headless, extract, rules,
-                         ai-rules, ai-site, trackers, generate, explanations, gamify, safe-fetch
+                         ai-rules, ai-site, trackers, explanations, gamify, safe-fetch
     ai/                  suggest-fixes (AI Gateway)
     db.js, db/scans.js   Neon client + saveScan / getScanByToken / recentScans
     gsc/                 Search Console OAuth (oauth, tokens, api)
