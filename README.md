@@ -14,6 +14,7 @@ A clean, Semrush-style SEO auditor that also grades a site for **AI search** (Ch
 - **Generators** — `sitemap.xml`, `llms.txt` (with optional AI enhance), `robots.txt`, `ai.txt` — in the dashboard and as standalone tools at `/tools`.
 - **Site speed & performance** — Lighthouse scores, Core Web Vitals, and optimization tips via Google PageSpeed Insights.
 - **Save, share & history** — every scan is persisted to Postgres (Neon); each gets a shareable `/r/[token]` link that reopens the saved report without re-scanning, and `/history` lists recent scans.
+- **Search Console insights** — connect Google Search Console (per-visitor OAuth) at `/search-console` to see top queries & pages, clicks/impressions/CTR/position with period-over-period deltas, a trend chart, and striking-distance (position 5–20) opportunities.
 - **Exports** — CSV and JSON; shareable report data.
 - **Dashboard** — sidebar sections (AI Readiness · Overview · Pages · Issues · Performance · Tracking · Generators), orange theme, light/dark mode.
 
@@ -51,8 +52,12 @@ All are optional — the app degrades gracefully without them (no DB → scans j
 | `CHROME_EXECUTABLE_PATH` | Headless rendering (local dev) | Path to a local Chrome/Chromium binary. |
 | `NEXT_PUBLIC_superengine_POSTHOG_PROJECT_TOKEN` | Product analytics (PostHog) | Client-side; pageviews + key events. No-ops when unset. |
 | `NEXT_PUBLIC_superengine_POSTHOG_HOST` | PostHog ingestion host | Defaults to `https://us.i.posthog.com`. |
+| `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` | Search Console (`/search-console`) | Google Cloud OAuth client (Web). Enable the Search Console API; register `…/api/gsc/callback` as a redirect URI. Needs Neon for token storage. |
+| `GSC_REDIRECT_URI` | Search Console (optional) | Override the OAuth redirect URI; otherwise derived from the request origin. |
 
 Add on Vercel with `vercel env add <NAME>`.
+
+> **Search Console setup:** `webmasters.readonly` is a Google *sensitive* scope. Until the OAuth app passes Google's verification, only **test users** you add in the Google Cloud console can connect (they'll see an "unverified app" screen). Steps: Google Cloud → **APIs & Services** → enable **Google Search Console API** → **OAuth consent screen** (External; add yourself as a test user) → **Credentials → Create OAuth client ID → Web application** → Authorized redirect URIs: `http://localhost:3000/api/gsc/callback` and `https://superengine.vercel.app/api/gsc/callback` → copy the client ID + secret into env.
 
 ## Project structure
 
@@ -65,6 +70,7 @@ src/
     scan/                Dashboard: scan-dashboard, app-sidebar, *-panel.js, score-ring, og-preview, ai-fix
     r/[token]/           Saved/shared report (read from Neon, no re-scan)
     history/             Recent scans list
+    search-console/      Google Search Console insights (per-visitor OAuth)
     tools/               Standalone generators (/tools, /tools/sitemap|llms|robots|ai-txt)
     api/                 export, report, ai-fix, pagespeed, generate/llms-ai
   lib/
@@ -72,6 +78,7 @@ src/
                          ai-rules, ai-site, trackers, generate, explanations, gamify, safe-fetch
     ai/                  suggest-fixes (AI Gateway)
     db.js, db/scans.js   Neon client + saveScan / getScanByToken / recentScans
+    gsc/                 Search Console OAuth (oauth, tokens, api)
   components/
     ui/                  shadcn/ui (Base UI) components
     posthog-provider.js  Client analytics provider (no-ops without a token)

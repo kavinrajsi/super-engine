@@ -22,6 +22,12 @@ export default function Home() {
             History
           </Link>
           <Link
+            href="/search-console"
+            className="text-sm font-medium text-muted-foreground no-underline hover:text-foreground"
+          >
+            Search Console
+          </Link>
+          <Link
             href="/tools"
             className="text-sm font-medium text-muted-foreground no-underline hover:text-foreground"
           >
