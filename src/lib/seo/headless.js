@@ -3,9 +3,10 @@
 // Lightweight by design: we use puppeteer-core (no bundled Chromium) and either
 //   1. connect to a remote browser over CDP  (BROWSER_WS_ENDPOINT) — recommended
 //      for production (Browserless / Browserbase / Cloudflare Browser Rendering)
-//   2. launch a local Chrome (CHROME_EXECUTABLE_PATH) — handy for dev
-// When neither is configured, renderHtml() returns null and the scan stays on
-// the fast fetch-only path (the page keeps its "needs headless" flag).
+//   2. create a fresh Browserbase session     (BROWSERBASE_API_KEY + _PROJECT_ID)
+//   3. launch a local Chrome                   (CHROME_EXECUTABLE_PATH) — for dev
+// When none is configured, the helpers return null and callers fall back to the
+// fast fetch-only path (the page keeps its "needs headless" flag).
 
 import { assertSafeUrl } from "./safe-fetch";
 
@@ -20,9 +21,10 @@ export function isHeadlessAvailable() {
   );
 }
 
-// Render a URL in a real browser and return the fully-rendered HTML, or null if
-// rendering isn't available or fails. SSRF-guarded like the fetch path.
-export async function renderHtml(url) {
+// Connect a browser (remote CDP / Browserbase session / local launch), open the
+// URL, run `fn(page)`, and tear the browser down. Returns fn's result, or null
+// if rendering isn't available or anything fails. SSRF-guarded.
+async function withBrowserPage(url, fn) {
   if (!isHeadlessAvailable()) return null;
   try {
     assertSafeUrl(url);
@@ -59,9 +61,9 @@ export async function renderHtml(url) {
     const page = await browser.newPage();
     await page.setUserAgent(USER_AGENT);
     await page.goto(url, { waitUntil: "networkidle2", timeout: NAV_TIMEOUT_MS });
-    const html = await page.content();
+    const result = await fn(page);
     await page.close();
-    return html;
+    return result;
   } catch {
     return null;
   } finally {
@@ -74,4 +76,25 @@ export async function renderHtml(url) {
       }
     }
   }
+}
+
+// Render a URL in a real browser and return the fully-rendered HTML, or null.
+export async function renderHtml(url) {
+  return withBrowserPage(url, (page) => page.content());
+}
+
+// Run axe-core's color-contrast checks (WCAG AA + AAA) against the rendered page
+// and return the raw axe result, or null if headless rendering is unavailable.
+export async function runAxeContrast(url) {
+  // axe-core ships its full browser source as a string; inject it as a <script>.
+  const { source: axeSource } = (await import("axe-core")).default;
+  return withBrowserPage(url, async (page) => {
+    await page.addScriptTag({ content: axeSource });
+    return page.evaluate(async () => {
+      return window.axe.run(document, {
+        runOnly: { type: "rule", values: ["color-contrast", "color-contrast-enhanced"] },
+        resultTypes: ["violations", "passes", "incomplete"],
+      });
+    });
+  });
 }

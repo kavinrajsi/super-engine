@@ -14,7 +14,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, FileText, ListChecks, Bot, Activity, FileCode2, Gauge } from "lucide-react";
+import { LayoutDashboard, FileText, ListChecks, Bot, Activity, FileCode2, Gauge, Contrast } from "lucide-react";
 import ThemeToggle from "@/components/theme-toggle";
 
 const NAV = [
@@ -23,6 +23,7 @@ const NAV = [
   { key: "pages", label: "Pages", icon: FileText },
   { key: "issues", label: "Issues", icon: ListChecks },
   { key: "performance", label: "Performance", icon: Gauge },
+  { key: "accessibility", label: "Accessibility", icon: Contrast },
   { key: "tracking", label: "Tracking", icon: Activity },
   { key: "generators", label: "Generators", icon: FileCode2 },
 ];
