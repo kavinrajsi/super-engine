@@ -26,7 +26,9 @@ const NAV = [
   { key: "tracking", label: "Tracking", icon: Activity },
 ];
 
-export default function AppSidebar({ active, onSelect, issueCount = 0 }) {
+const PRO_SECTIONS = new Set(["performance"]);
+
+export default function AppSidebar({ active, onSelect, issueCount = 0, pro = true }) {
   return (
     <Sidebar>
       <SidebarHeader>
@@ -47,6 +49,9 @@ export default function AppSidebar({ active, onSelect, issueCount = 0 }) {
                 </SidebarMenuButton>
                 {n.key === "issues" && issueCount > 0 && (
                   <SidebarMenuBadge>{issueCount}</SidebarMenuBadge>
+                )}
+                {!pro && PRO_SECTIONS.has(n.key) && (
+                  <SidebarMenuBadge className="text-primary">Pro</SidebarMenuBadge>
                 )}
               </SidebarMenuItem>
             ))}

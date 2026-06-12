@@ -39,7 +39,7 @@ function MetaRow({ label, value }) {
   );
 }
 
-export default function PagesPanel({ result }) {
+export default function PagesPanel({ result, pro = true }) {
   return (
     <div className="mx-auto max-w-5xl">
       {/* Column header (md+) — sticky below the dashboard top bar (h-14) */}
@@ -141,7 +141,7 @@ export default function PagesPanel({ result }) {
                   </div>
                 )}
 
-                {a && <AiFix page={p} />}
+                {a && <AiFix page={p} pro={pro} />}
               </AccordionContent>
             </AccordionItem>
           );

@@ -42,7 +42,19 @@ function ShareButton({ shareToken }) {
   );
 }
 
-export default function ScanDashboard({ result, exportHref, reportHref, shareToken }) {
+function ProUpsell({ feature }) {
+  return (
+    <div className="mx-auto max-w-md rounded-lg border bg-card p-6 text-center">
+      <div className="text-2xl">🔒</div>
+      <h3 className="mt-2 text-lg font-semibold">{feature} is a Pro feature</h3>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Upgrade to Pro to unlock {feature}, deep scans, Search Console, and saved history.
+      </p>
+    </div>
+  );
+}
+
+export default function ScanDashboard({ result, exportHref, reportHref, shareToken, pro = true }) {
   const [active, setActive] = useState("ai");
   const ph = usePostHog();
 
@@ -63,7 +75,7 @@ export default function ScanDashboard({ result, exportHref, reportHref, shareTok
 
   return (
     <SidebarProvider>
-      <AppSidebar active={active} onSelect={setActive} issueCount={issueCount} />
+      <AppSidebar active={active} onSelect={setActive} issueCount={issueCount} pro={pro} />
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur">
           <SidebarTrigger />
@@ -85,10 +97,11 @@ export default function ScanDashboard({ result, exportHref, reportHref, shareTok
 
         <main className="flex-1 p-4 md:p-6">
           {active === "overview" && <OverviewPanel result={result} onSelect={setActive} />}
-          {active === "pages" && <PagesPanel result={result} />}
+          {active === "pages" && <PagesPanel result={result} pro={pro} />}
           {active === "issues" && <IssuesPanel result={result} />}
           {active === "ai" && <AiReadinessPanel readiness={result.aiReadiness} />}
-          {active === "performance" && <PerformancePanel url={result.rootUrl} />}
+          {active === "performance" &&
+            (pro ? <PerformancePanel url={result.rootUrl} /> : <ProUpsell feature="Performance" />)}
           {active === "tracking" && <TrackingPanel analytics={result.analytics} />}
         </main>
       </SidebarInset>

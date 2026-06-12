@@ -8,10 +8,29 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { isGscConfigured } from "@/lib/gsc/oauth";
 import { getSession } from "@/lib/gsc/tokens";
+import { currentUser } from "@/lib/auth/session";
+import { isAuthConfigured } from "@/lib/auth/google";
+import { isPro } from "@/lib/auth/plan";
 import GscDashboard from "./gsc-dashboard";
 
 export const metadata = { title: "Search Console — Meta Tag" };
 export const dynamic = "force-dynamic";
+
+function Shell({ children }) {
+  return (
+    <div className="min-h-screen">
+      <header className="flex h-14 items-center justify-between border-b px-6">
+        <Link href="/" className="font-bold tracking-tight no-underline">
+          🔎 Meta Tag
+        </Link>
+        <ThemeToggle />
+      </header>
+      <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center gap-4 p-6 text-center">
+        {children}
+      </div>
+    </div>
+  );
+}
 
 const ERRORS = {
   state_mismatch: "Sign-in couldn't be verified. Please try connecting again.",
@@ -23,6 +42,34 @@ const ERRORS = {
 
 export default async function SearchConsolePage({ searchParams }) {
   const sp = await searchParams;
+
+  // App-login + Pro gate (separate from the per-visitor Google connection).
+  const appUser = isAuthConfigured() ? await currentUser() : null;
+  if (isAuthConfigured() && !appUser) {
+    return (
+      <Shell>
+        <h1 className="text-2xl font-bold">Sign in to use Search Console</h1>
+        <Link href="/login?next=/search-console" className={buttonVariants()}>
+          Sign in
+        </Link>
+      </Shell>
+    );
+  }
+  if (appUser && !isPro(appUser)) {
+    return (
+      <Shell>
+        <h1 className="text-2xl font-bold">Search Console is a Pro feature</h1>
+        <p className="text-muted-foreground">
+          Upgrade to Pro to connect Google Search Console and see your queries, pages, and
+          opportunities.
+        </p>
+        <Link href="/" className={buttonVariants({ variant: "outline" })}>
+          ← Back home
+        </Link>
+      </Shell>
+    );
+  }
+
   const configured = isGscConfigured();
   const sessionId = (await cookies()).get("gsc_session")?.value;
   const session = configured && sessionId ? await getSession(sessionId) : null;

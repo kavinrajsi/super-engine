@@ -15,6 +15,7 @@ A clean, Semrush-style SEO auditor that also grades a site for **AI search** (Ch
 - **Save, share & history** — every scan is persisted to Postgres (Neon); each gets a shareable `/r/[token]` link that reopens the saved report without re-scanning, and `/history` lists recent scans.
 - **Search Console insights** — connect Google Search Console (per-visitor OAuth) at `/search-console` to see top queries & pages, clicks/impressions/CTR/position with period-over-period deltas, a trend chart, and striking-distance (position 5–20) opportunities.
 - **Exports** — CSV and JSON; shareable report data.
+- **Accounts & plans** — Google sign-in (`/login`) with a **Free / Pro** model. Free: 3 scans/day, 10 pages/scan, core audit. Pro: 100 scans/day, 40 pages, deep scan, Performance, Search Console, AI fixes, and saved history. (Billing not wired yet — Pro is set manually.)
 - **Dashboard** — sidebar sections (AI Readiness · Overview · Pages · Issues · Performance · Tracking), orange theme, light/dark mode.
 
 ## Tech stack
@@ -51,8 +52,8 @@ All are optional — the app degrades gracefully without them (no DB → scans j
 | `CHROME_EXECUTABLE_PATH` | Headless rendering (local dev) | Path to a local Chrome/Chromium binary. |
 | `NEXT_PUBLIC_superengine_POSTHOG_PROJECT_TOKEN` | Product analytics (PostHog) | Client-side; pageviews + key events. No-ops when unset. |
 | `NEXT_PUBLIC_superengine_POSTHOG_HOST` | PostHog ingestion host | Defaults to `https://us.i.posthog.com`. |
-| `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` | Search Console (`/search-console`) | Google Cloud OAuth client (Web). Enable the Search Console API; register `…/api/gsc/callback` as a redirect URI. Needs Neon for token storage. |
-| `GSC_REDIRECT_URI` | Search Console (optional) | Override the OAuth redirect URI; otherwise derived from the request origin. |
+| `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` | Google sign-in (`/login`) **and** Search Console | One OAuth client (Web). Register **both** redirect URIs: `…/api/auth/callback` (login) and `…/api/gsc/callback` (Search Console). Login uses non-sensitive `openid email profile` scopes (no Google verification needed); GSC's `webmasters.readonly` is sensitive. Needs Neon. |
+| `AUTH_REDIRECT_URI` / `GSC_REDIRECT_URI` | Auth / GSC (optional) | Override the login / GSC redirect URI; otherwise derived from the request origin. |
 
 Add on Vercel with `vercel env add <NAME>`.
 
@@ -71,17 +72,20 @@ src/
     history/             Recent scans list
     search-console/      Google Search Console insights (per-visitor OAuth)
     google-updates/      Google algorithm-update timeline
-    api/                 export, report, ai-fix, pagespeed
+    login/               Google sign-in page
+    api/                 export, report, ai-fix, pagespeed, auth/*, gsc/*
   lib/
     seo/                 analyze (orchestrator), sitemap, crawl, headless, extract, rules,
                          ai-rules, ai-site, trackers, explanations, gamify, safe-fetch
     ai/                  suggest-fixes (AI Gateway)
     db.js, db/scans.js   Neon client + saveScan / getScanByToken / recentScans
+    auth/                Google login (google, session, plan) — Free/Pro gating
     gsc/                 Search Console OAuth (oauth, tokens, api)
   components/
     ui/                  shadcn/ui (Base UI) components
+    user-menu.js         Header auth control (avatar + plan + sign out)
     posthog-provider.js  Client analytics provider (no-ops without a token)
-db/schema.sql            scans table DDL
+db/schema.sql            DB DDL (users, sessions, scans, gsc_*, performance_runs)
 scripts/migrate.mjs      One-time migration runner
 ```
 

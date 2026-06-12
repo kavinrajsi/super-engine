@@ -8,19 +8,20 @@ function makeToken() {
   return randomBytes(8).toString("base64url").slice(0, 10);
 }
 
-export async function saveScan(result) {
+export async function saveScan(result, userId = null) {
   if (!sql) return null;
   const token = makeToken();
   try {
     await sql`
-      INSERT INTO scans (share_token, url, site_score, ai_overall, pages_count, result)
+      INSERT INTO scans (share_token, url, site_score, ai_overall, pages_count, result, user_id)
       VALUES (
         ${token},
         ${result.rootUrl},
         ${result.siteScore ?? null},
         ${result.aiReadiness?.overall ?? null},
         ${result.pages?.length ?? 0},
-        ${JSON.stringify(result)}::jsonb
+        ${JSON.stringify(result)}::jsonb,
+        ${userId}
       )`;
     return token;
   } catch {
@@ -38,12 +39,13 @@ export async function getScanByToken(token) {
   }
 }
 
-export async function recentScans(limit = 30) {
-  if (!sql) return [];
+// Recent scans for one user (history is a Pro feature, scoped per user).
+export async function recentScans(userId, limit = 30) {
+  if (!sql || !userId) return [];
   try {
     return await sql`
       SELECT share_token, url, site_score, ai_overall, pages_count, created_at
-      FROM scans ORDER BY created_at DESC LIMIT ${limit}`;
+      FROM scans WHERE user_id = ${userId} ORDER BY created_at DESC LIMIT ${limit}`;
   } catch {
     return [];
   }

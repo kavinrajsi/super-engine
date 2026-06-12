@@ -9,7 +9,7 @@ import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-export default function AiFix({ page }) {
+export default function AiFix({ page, pro = true }) {
   const ph = usePostHog();
   const [state, setState] = useState("idle"); // idle | loading | done | error
   const [data, setData] = useState(null);
@@ -17,6 +17,16 @@ export default function AiFix({ page }) {
   const [copied, setCopied] = useState(-1);
 
   if (!page.audit) return null;
+
+  if (!pro) {
+    return (
+      <div className="mt-3">
+        <Button variant="outline" size="sm" disabled>
+          <Sparkles /> AI fixes — Pro
+        </Button>
+      </div>
+    );
+  }
 
   async function run() {
     setState("loading");

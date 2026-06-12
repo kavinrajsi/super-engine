@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import ThemeToggle from "@/components/theme-toggle";
+import UserMenu from "@/components/user-menu";
 
 export default function Home() {
   return (
@@ -34,6 +35,7 @@ export default function Home() {
             Algorithm updates
           </Link>
           <ThemeToggle />
+          <UserMenu />
         </div>
       </header>
 

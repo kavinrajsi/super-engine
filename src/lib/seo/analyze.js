@@ -91,7 +91,8 @@ async function analyzeRendered(url) {
 }
 
 // Main entry. Returns a complete scan result object.
-export async function runScan(rootUrl, { deepScan = false } = {}) {
+export async function runScan(rootUrl, { deepScan = false, maxPages = MAX_PAGES_SYNC } = {}) {
+  const pageCap = Math.min(maxPages || MAX_PAGES_SYNC, MAX_PAGES_SYNC);
   // Sitemap discovery and the site-level AI checks are independent — fetch both
   // at once.
   const [sitemap, aiSite] = await Promise.all([
@@ -111,8 +112,8 @@ export async function runScan(rootUrl, { deepScan = false } = {}) {
   // discovered-missing URLs, de-duplicated and capped. Seeding the root URL
   // guarantees we audit something even when a site has no sitemap.
   const candidates = [...new Set([rootUrl, ...sitemapUrls, ...missingFromSitemap])];
-  const toAnalyze = candidates.slice(0, MAX_PAGES_SYNC);
-  const analyzedTruncated = candidates.length > MAX_PAGES_SYNC;
+  const toAnalyze = candidates.slice(0, pageCap);
+  const analyzedTruncated = candidates.length > pageCap;
 
   let pages = await mapPool(toAnalyze, CONCURRENCY, analyzeOne);
 

@@ -3,9 +3,30 @@ import ThemeToggle from "@/components/theme-toggle";
 import { recentScans } from "@/lib/db/scans";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { currentUser } from "@/lib/auth/session";
+import { isAuthConfigured } from "@/lib/auth/google";
+import { isPro } from "@/lib/auth/plan";
 
 export const metadata = { title: "Scan history — Meta Tag" };
 export const dynamic = "force-dynamic";
+
+function Gate({ title, children }) {
+  return (
+    <div className="min-h-screen">
+      <header className="flex h-14 items-center justify-between border-b px-6">
+        <Link href="/" className="font-bold tracking-tight no-underline">
+          🔎 Meta Tag
+        </Link>
+        <ThemeToggle />
+      </header>
+      <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center gap-4 p-6 text-center">
+        <h1 className="text-2xl font-bold">{title}</h1>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 function grade(s) {
   if (s == null) return "—";
@@ -17,7 +38,32 @@ function grade(s) {
 }
 
 export default async function HistoryPage() {
-  const scans = await recentScans(50);
+  const user = isAuthConfigured() ? await currentUser() : null;
+
+  if (isAuthConfigured() && !user) {
+    return (
+      <Gate title="Sign in to view history">
+        <p className="text-muted-foreground">Your saved scans are tied to your account.</p>
+        <Link href="/login?next=/history" className={buttonVariants()}>
+          Sign in
+        </Link>
+      </Gate>
+    );
+  }
+  if (user && !isPro(user)) {
+    return (
+      <Gate title="History is a Pro feature">
+        <p className="text-muted-foreground">
+          Upgrade to Pro to keep and revisit your saved scan history.
+        </p>
+        <Link href="/" className={buttonVariants({ variant: "outline" })}>
+          ← Back home
+        </Link>
+      </Gate>
+    );
+  }
+
+  const scans = await recentScans(user?.id, 50);
 
   return (
     <div className="min-h-screen">
