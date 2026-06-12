@@ -4,6 +4,7 @@
 import { cookies } from "next/headers";
 import { getValidAccessToken } from "@/lib/gsc/tokens";
 import { buildReport } from "@/lib/gsc/api";
+import { saveGscReport } from "@/lib/db/records";
 
 export const maxDuration = 60;
 
@@ -23,6 +24,7 @@ export async function GET(request) {
     const auth = await getValidAccessToken(sessionId);
     if (!auth) return Response.json({ error: "not_connected" }, { status: 401 });
     const report = await buildReport(auth.accessToken, site, days);
+    await saveGscReport({ sessionId, email: auth.email, siteUrl: site, days, report });
     return Response.json(report);
   } catch (e) {
     return Response.json({ error: e.message }, { status: 502 });

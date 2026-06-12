@@ -2,6 +2,7 @@
 // Keyless by default (lower anonymous rate limit); set PAGESPEED_API_KEY for more.
 
 import { assertSafeUrl } from "@/lib/seo/safe-fetch";
+import { savePerformanceRun } from "@/lib/db/records";
 
 export const maxDuration = 60;
 
@@ -83,5 +84,7 @@ export async function GET(request) {
     }));
 
   const fieldData = !!data.loadingExperience?.metrics;
-  return Response.json({ strategy, scores, cwv, opportunities, fieldData });
+  const result = { strategy, scores, cwv, opportunities, fieldData };
+  await savePerformanceRun({ url: safe.toString(), strategy, result });
+  return Response.json(result);
 }

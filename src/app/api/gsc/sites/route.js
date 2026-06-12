@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { getValidAccessToken } from "@/lib/gsc/tokens";
 import { listSites } from "@/lib/gsc/api";
+import { saveGscConnection } from "@/lib/db/records";
 
 export async function GET() {
   const sessionId = (await cookies()).get("gsc_session")?.value;
@@ -12,6 +13,7 @@ export async function GET() {
     const auth = await getValidAccessToken(sessionId);
     if (!auth) return Response.json({ error: "not_connected" }, { status: 401 });
     const sites = await listSites(auth.accessToken);
+    await saveGscConnection({ sessionId, email: auth.email, properties: sites });
     return Response.json({ email: auth.email, sites });
   } catch (e) {
     return Response.json({ error: e.message }, { status: 502 });
