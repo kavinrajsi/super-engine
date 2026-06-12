@@ -12,7 +12,7 @@ export default async function SharedReport({ params }) {
     return (
       <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center gap-4 p-6 text-center">
         <p className="text-muted-foreground">This shared report wasn’t found or has expired.</p>
-        <Link href="/" className="text-primary hover:underline">
+        <Link href="/" className="text-primary-link hover:underline">
           ← Run a new audit
         </Link>
       </div>

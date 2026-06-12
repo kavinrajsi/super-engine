@@ -54,7 +54,7 @@ function AffectedPages({ occurrences }) {
               target="_blank"
               rel="noreferrer"
               title={o.url}
-              className="shrink-0 truncate font-mono text-xs text-primary hover:underline sm:max-w-[16rem]"
+              className="shrink-0 truncate font-mono text-xs text-primary-link hover:underline sm:max-w-[16rem]"
             >
               {prettyUrl(o.url)}
             </a>

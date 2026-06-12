@@ -8,12 +8,13 @@
   --surface: var(--card);
   --muted: oklch(0.97 0 0);
   --border: oklch(0.922 0 0);
-  --primary: oklch(0.68 0.2 41); /* Semrush orange */
+  --primary: oklch(0.66 0.2 41); /* Semrush orange — fill (white text ≥ AA large) */
+  --primary-link: oklch(0.58 0.2 41); /* darker orange for inline accent/link text (AA 4.5:1 on white) */
   --primary-fg: #ffffff;
-  --error: #dc2626;
-  --warning: #d97706;
-  --pass: #16a34a;
-  --info: #6b7280;
+  --error: #c81e1e;
+  --warning: #a8500a;
+  --pass: #15793b;
+  --info: #5b6470;
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -24,10 +25,10 @@
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
-  --muted-foreground: oklch(0.556 0 0);
+  --muted-foreground: oklch(0.54 0 0);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
+  --destructive: oklch(0.52 0.245 27.325);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.68 0.2 41);
   --chart-1: oklch(0.68 0.2 41);
@@ -63,7 +64,7 @@ body {
 }
 
 a {
-  color: var(--primary);
+  color: var(--primary-link);
   text-decoration: none;
 }
 a:hover {
@@ -150,6 +151,7 @@ a:hover {
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
+  --color-primary-link: var(--primary-link);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -173,7 +175,13 @@ a:hover {
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.72 0.19 45); /* Semrush orange (dark) */
+  --primary-link: oklch(0.72 0.19 45); /* bright enough on dark — AA as link text */
   --primary-foreground: oklch(0.205 0 0);
+  /* Status colors need lighter values on the dark background to stay AA. */
+  --error: #ef4444;
+  --warning: #f59e0b;
+  --pass: #22c55e;
+  --info: #9ca3af;
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
