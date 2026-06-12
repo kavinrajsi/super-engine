@@ -13,7 +13,6 @@
     "@browserbasehq/sdk": "^2.14.0",
     "@neondatabase/serverless": "^1.1.0",
     "ai": "^6.0.201",
-    "axe-core": "^4.12.1",
     "cheerio": "^1.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

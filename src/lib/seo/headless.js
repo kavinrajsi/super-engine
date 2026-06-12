@@ -82,19 +82,3 @@ async function withBrowserPage(url, fn) {
 export async function renderHtml(url) {
   return withBrowserPage(url, (page) => page.content());
 }
-
-// Run axe-core's color-contrast checks (WCAG AA + AAA) against the rendered page
-// and return the raw axe result, or null if headless rendering is unavailable.
-export async function runAxeContrast(url) {
-  // axe-core ships its full browser source as a string; inject it as a <script>.
-  const { source: axeSource } = (await import("axe-core")).default;
-  return withBrowserPage(url, async (page) => {
-    await page.addScriptTag({ content: axeSource });
-    return page.evaluate(async () => {
-      return window.axe.run(document, {
-        runOnly: { type: "rule", values: ["color-contrast", "color-contrast-enhanced"] },
-        resultTypes: ["violations", "passes", "incomplete"],
-      });
-    });
-  });
-}
