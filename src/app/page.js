@@ -34,6 +34,12 @@ export default function Home() {
           >
             Algorithm updates
           </Link>
+          <Link
+            href="/pricing"
+            className="text-sm font-medium text-muted-foreground no-underline hover:text-foreground"
+          >
+            Pricing
+          </Link>
           <ThemeToggle />
           <UserMenu />
         </div>

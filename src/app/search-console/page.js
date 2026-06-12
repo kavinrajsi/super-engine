@@ -63,8 +63,8 @@ export default async function SearchConsolePage({ searchParams }) {
           Upgrade to Pro to connect Google Search Console and see your queries, pages, and
           opportunities.
         </p>
-        <Link href="/" className={buttonVariants({ variant: "outline" })}>
-          ← Back home
+        <Link href="/pricing" className={buttonVariants()}>
+          Upgrade to Pro
         </Link>
       </Shell>
     );

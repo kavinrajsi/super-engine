@@ -15,7 +15,7 @@ A clean, Semrush-style SEO auditor that also grades a site for **AI search** (Ch
 - **Save, share & history** — every scan is persisted to Postgres (Neon); each gets a shareable `/r/[token]` link that reopens the saved report without re-scanning, and `/history` lists recent scans.
 - **Search Console insights** — connect Google Search Console (per-visitor OAuth) at `/search-console` to see top queries & pages, clicks/impressions/CTR/position with period-over-period deltas, a trend chart, and striking-distance (position 5–20) opportunities.
 - **Exports** — CSV and JSON; shareable report data.
-- **Accounts & plans** — Google sign-in (`/login`) with a **Free / Pro** model. Free: 3 scans/day, 10 pages/scan, core audit. Pro: 100 scans/day, 40 pages, deep scan, Performance, Search Console, AI fixes, and saved history. (Billing not wired yet — Pro is set manually.)
+- **Accounts & plans** — Google sign-in (`/login`) with a **Free / Pro** model. Free: 3 scans/day, 10 pages/scan, core audit. Pro: 100 scans/day, 40 pages, deep scan, Performance, Search Console, AI fixes, and saved history. **Razorpay** subscriptions at `/pricing` (UPI/cards) upgrade users to Pro automatically.
 - **Dashboard** — sidebar sections (AI Readiness · Overview · Pages · Issues · Performance · Tracking), orange theme, light/dark mode.
 
 ## Tech stack
@@ -54,8 +54,13 @@ All are optional — the app degrades gracefully without them (no DB → scans j
 | `NEXT_PUBLIC_superengine_POSTHOG_HOST` | PostHog ingestion host | Defaults to `https://us.i.posthog.com`. |
 | `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` | Google sign-in (`/login`) **and** Search Console | One OAuth client (Web). Register **both** redirect URIs: `…/api/auth/callback` (login) and `…/api/gsc/callback` (Search Console). Login uses non-sensitive `openid email profile` scopes (no Google verification needed); GSC's `webmasters.readonly` is sensitive. Needs Neon. |
 | `AUTH_REDIRECT_URI` / `GSC_REDIRECT_URI` | Auth / GSC (optional) | Override the login / GSC redirect URI; otherwise derived from the request origin. |
+| `RAZORPAY_KEY_ID` + `RAZORPAY_KEY_SECRET` | Pro billing (`/pricing`) | Razorpay API keys (test or live). Without them, upgrade is disabled (Pro stays manual). |
+| `RAZORPAY_WEBHOOK_SECRET` | Billing webhook | Secret for `…/api/billing/webhook`; the plan only flips on signature-verified events. |
+| `RAZORPAY_PRO_PLAN_ID` (+ `_ANNUAL`) | Pro plan(s) | The Razorpay dashboard plan id(s) the subscription is created against. |
 
 Add on Vercel with `vercel env add <NAME>`.
+
+> **Razorpay setup:** create a **Pro plan** in the Razorpay dashboard (Subscriptions → Plans; set the INR amount — keep `PRO_PRICING` in `src/lib/auth/plan.js` matching it), copy its `plan_id` into `RAZORPAY_PRO_PLAN_ID`. Add API keys + a **webhook** → `…/api/billing/webhook` subscribed to the `subscription.*` events, with the secret in `RAZORPAY_WEBHOOK_SECRET`. Pro can still be granted manually for comps: `UPDATE users SET plan='pro' WHERE email=…`.
 
 > **Search Console setup:** `webmasters.readonly` is a Google *sensitive* scope. Until the OAuth app passes Google's verification, only **test users** you add in the Google Cloud console can connect (they'll see an "unverified app" screen). Steps: Google Cloud → **APIs & Services** → enable **Google Search Console API** → **OAuth consent screen** (External; add yourself as a test user) → **Credentials → Create OAuth client ID → Web application** → Authorized redirect URIs: `http://localhost:3000/api/gsc/callback` and `https://superengine.vercel.app/api/gsc/callback` → copy the client ID + secret into env.
 
@@ -73,13 +78,15 @@ src/
     search-console/      Google Search Console insights (per-visitor OAuth)
     google-updates/      Google algorithm-update timeline
     login/               Google sign-in page
-    api/                 export, report, ai-fix, pagespeed, auth/*, gsc/*
+    pricing/             Free vs Pro + Razorpay upgrade
+    api/                 export, report, ai-fix, pagespeed, auth/*, gsc/*, billing/*
   lib/
     seo/                 analyze (orchestrator), sitemap, crawl, headless, extract, rules,
                          ai-rules, ai-site, trackers, explanations, gamify, safe-fetch
     ai/                  suggest-fixes (AI Gateway)
     db.js, db/scans.js   Neon client + saveScan / getScanByToken / recentScans
     auth/                Google login (google, session, plan) — Free/Pro gating
+    billing/             Razorpay subscriptions (razorpay, store)
     gsc/                 Search Console OAuth (oauth, tokens, api)
   components/
     ui/                  shadcn/ui (Base UI) components

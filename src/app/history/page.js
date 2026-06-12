@@ -56,8 +56,8 @@ export default async function HistoryPage() {
         <p className="text-muted-foreground">
           Upgrade to Pro to keep and revisit your saved scan history.
         </p>
-        <Link href="/" className={buttonVariants({ variant: "outline" })}>
-          ← Back home
+        <Link href="/pricing" className={buttonVariants()}>
+          Upgrade to Pro
         </Link>
       </Gate>
     );

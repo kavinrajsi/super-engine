@@ -9,6 +9,13 @@ export const PLANS = {
   pro: { label: "Pro", scansPerDay: 100, maxPages: 40, deepScan: true, premium: true, history: true },
 };
 
+// Display prices for the pricing page (INR). These must match the amounts on
+// the Razorpay dashboard plans (RAZORPAY_PRO_PLAN_ID / _ANNUAL).
+export const PRO_PRICING = {
+  monthly: { amount: "₹999", per: "/mo" },
+  annual: { amount: "₹9,999", per: "/yr", note: "2 months free" },
+};
+
 export function planOf(user) {
   return PLANS[user?.plan] || PLANS.free;
 }

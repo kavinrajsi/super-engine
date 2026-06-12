@@ -35,7 +35,7 @@ export async function upsertUserAndSession(profile) {
 export async function getSessionUser(sessionId) {
   if (!sql || !sessionId) return null;
   const rows = await sql`
-    SELECT u.id, u.email, u.name, u.picture, u.plan
+    SELECT u.id, u.email, u.name, u.picture, u.plan, u.subscription_status, u.current_period_end
     FROM sessions s JOIN users u ON u.id = s.user_id
     WHERE s.id = ${sessionId} AND (s.expires_at IS NULL OR s.expires_at > now())
     LIMIT 1`;

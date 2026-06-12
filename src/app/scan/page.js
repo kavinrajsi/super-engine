@@ -24,8 +24,8 @@ function LimitState({ used, limit }) {
         You&rsquo;ve used {used}/{limit} free scans today. Upgrade to Pro for higher limits, deep
         scans, Performance, Search Console, and saved history.
       </p>
-      <Link href="/" className={buttonVariants({ variant: "outline" })}>
-        ← Back home
+      <Link href="/pricing" className={buttonVariants()}>
+        Upgrade to Pro
       </Link>
     </div>
   );

@@ -50,6 +50,9 @@ function ProUpsell({ feature }) {
       <p className="mt-1 text-sm text-muted-foreground">
         Upgrade to Pro to unlock {feature}, deep scans, Search Console, and saved history.
       </p>
+      <Link href="/pricing" className={buttonVariants({ className: "mt-4" })}>
+        Upgrade to Pro
+      </Link>
     </div>
   );
 }
