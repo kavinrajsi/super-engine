@@ -141,17 +141,17 @@ function buildPairs(theme) {
   }
 
   // Buttons
-  add("button default: primary-fg / primary", c("primary-foreground"), c("primary"), "large");
-  add("button secondary: secondary-fg / secondary", c("secondary-foreground"), c("secondary"), "large");
-  add("button outline/ghost: foreground / background", c("foreground"), bg, "large");
-  add("button ghost hover: foreground / muted", c("foreground"), c("muted"), "large");
+  add("button default: primary-fg / primary", c("primary-foreground"), c("primary"), "text"); // small/medium label = normal text
+  add("button secondary: secondary-fg / secondary", c("secondary-foreground"), c("secondary"), "text"); // small/medium label = normal text
+  add("button outline/ghost: foreground / background", c("foreground"), bg, "text"); // small/medium label = normal text
+  add("button ghost hover: foreground / muted", c("foreground"), c("muted"), "text"); // small/medium label = normal text
   add("button destructive: destructive / destructive-10", c("destructive"), over(alpha(c("destructive"), 10), bg));
   add("button link: primary-link / background", c("primary-link"), bg);
 
   // Badges
-  add("badge default: primary-fg / primary", c("primary-foreground"), c("primary"), "large");
+  add("badge default: primary-fg / primary", c("primary-foreground"), c("primary"), "text"); // small/medium label = normal text
   add("badge destructive: destructive / destructive-10", c("destructive"), over(alpha(c("destructive"), 10), bg));
-  add("badge outline: foreground / background", c("foreground"), bg, "large");
+  add("badge outline: foreground / background", c("foreground"), bg, "text"); // small/medium label = normal text
 
   return P;
 }
