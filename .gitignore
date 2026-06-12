@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local database files (schema/dumps kept out of the repo)
+/db/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
