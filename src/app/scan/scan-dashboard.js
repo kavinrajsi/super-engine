@@ -104,6 +104,14 @@ export default function ScanDashboard({ result, exportHref, reportHref, shareTok
           >
             MD
           </a>
+          <a
+            href={reportHref.replace("/api/report?", "/report?")}
+            target="_blank"
+            rel="noreferrer"
+            className={buttonVariants({ variant: "outline", size: "sm", className: "hidden sm:inline-flex" })}
+          >
+            PDF
+          </a>
           <ShareButton shareToken={shareToken} />
           <Link href="/" className={buttonVariants({ size: "sm" })}>
             New scan

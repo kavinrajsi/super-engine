@@ -217,6 +217,16 @@ a:hover {
   --sidebar-ring: oklch(0.72 0.19 45);
 }
 
+/* Print: hide controls and flatten to white for clean Save-as-PDF output. */
+@media print {
+  [data-print-hide] {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
