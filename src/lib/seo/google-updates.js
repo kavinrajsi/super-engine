@@ -1,4 +1,5 @@
-// Confirmed Google Search ranking updates (core + spam), newest first.
+// Confirmed Google ranking updates (core + spam, plus the Feb 2026 Discover
+// core update), newest first.
 //
 // Source of truth: Google Search Status Dashboard.
 //   https://status.search.google.com/products/rGHU1u87FJnkP6W2GwMi/history
@@ -40,6 +41,16 @@ export const GOOGLE_UPDATES = [
     duration: "19h 30m",
     status: "Completed",
     summary: "Short spam update enforcing Google's spam policies via automated systems (SpamBrain) — a quick, sub-day rollout.",
+  },
+  {
+    name: "February 2026 Discover Core Update",
+    type: "core",
+    start: "2026-02-05",
+    end: "2026-02-27",
+    duration: "21d 17h",
+    status: "Completed",
+    summary:
+      "Google's first core update labeled specifically for Discover (not traditional Search rankings) — a broad recalibration of how the Discover feed selects content. Rolled out first to US-English with a stronger weighting toward sites in the user's own country, expanding to more regions and languages after.",
   },
   {
     name: "December 2025 Core Update",

@@ -23,7 +23,7 @@ export default function GoogleUpdatesPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Google algorithm updates</h1>
           <p className="text-muted-foreground">
-            Every confirmed Google Search ranking update (core &amp; spam) from 2024 to today,
+            Every confirmed Google ranking update (core, spam &amp; Discover) from 2024 to today,
             newest first — handy for lining up traffic shifts with a known update.
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
