@@ -14,7 +14,7 @@ import { planOf, scansUsedToday } from "@/lib/auth/plan";
 import { buttonVariants } from "@/components/ui/button";
 import ScanDashboard from "./scan-dashboard";
 
-export const metadata = { title: "Scan results — Meta Tag" };
+export const metadata = { title: "Scan results — MadRank" };
 
 function LimitState({ used, limit }) {
   return (

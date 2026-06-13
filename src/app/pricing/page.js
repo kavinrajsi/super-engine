@@ -13,7 +13,7 @@ import { isBillingConfigured } from "@/lib/billing/razorpay";
 import UpgradeButton from "./upgrade-button";
 import ManageSubscription from "./manage-subscription";
 
-export const metadata = { title: "Pricing — Meta Tag" };
+export const metadata = { title: "Pricing — MadRank" };
 export const dynamic = "force-dynamic";
 
 const FREE_POINTS = [
@@ -47,7 +47,7 @@ export default async function PricingPage() {
     <div className="min-h-screen">
       <header className="flex h-14 items-center justify-between border-b px-6">
         <Link href="/" className="font-bold tracking-tight no-underline">
-          🔎 Meta Tag
+          📈 MadRank
         </Link>
         <ThemeToggle />
       </header>

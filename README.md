@@ -1,4 +1,4 @@
-# Meta Tag — SEO & AI-Search Audit
+# MadRank — SEO & AI-Search Audit
 
 A clean, Semrush-style SEO auditor that also grades a site for **AI search** (ChatGPT, Google AI Overviews, Perplexity). Enter a URL → it reads the sitemap, crawls pages, and reports on-page SEO, social tags, AI-readiness, trackers, performance, and more — with one-click AI fixes.
 

@@ -7,14 +7,14 @@ import ThemeToggle from "@/components/theme-toggle";
 import { GOOGLE_UPDATES, SOURCE_URL, DATA_AS_OF } from "@/lib/seo/google-updates";
 import UpdatesTimeline from "./updates-timeline";
 
-export const metadata = { title: "Google Algorithm Updates — Meta Tag" };
+export const metadata = { title: "Google Algorithm Updates — MadRank" };
 
 export default function GoogleUpdatesPage() {
   return (
     <div className="min-h-screen">
       <header className="flex h-14 items-center justify-between border-b px-6">
         <Link href="/" className="font-bold tracking-tight no-underline">
-          🔎 Meta Tag
+          📈 MadRank
         </Link>
         <ThemeToggle />
       </header>

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getScanByToken } from "@/lib/db/scans";
 import ScanDashboard from "@/app/scan/scan-dashboard";
 
-export const metadata = { title: "Shared report — Meta Tag" };
+export const metadata = { title: "Shared report — MadRank" };
 
 export default async function SharedReport({ params }) {
   const { token } = await params;

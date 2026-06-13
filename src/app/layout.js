@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Meta Tag — SEO Audit",
+  title: "MadRank — SEO Audit",
   description:
     "Enter a URL to audit its sitemap and on-page SEO, social, and AI-search signals.",
 };

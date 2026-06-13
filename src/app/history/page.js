@@ -8,7 +8,7 @@ import { currentUser } from "@/lib/auth/session";
 import { isAuthConfigured } from "@/lib/auth/google";
 import { isPro } from "@/lib/auth/plan";
 
-export const metadata = { title: "Scan history — Meta Tag" };
+export const metadata = { title: "Scan history — MadRank" };
 export const dynamic = "force-dynamic";
 
 function Gate({ title, children }) {
@@ -16,7 +16,7 @@ function Gate({ title, children }) {
     <div className="min-h-screen">
       <header className="flex h-14 items-center justify-between border-b px-6">
         <Link href="/" className="font-bold tracking-tight no-underline">
-          🔎 Meta Tag
+          📈 MadRank
         </Link>
         <ThemeToggle />
       </header>
@@ -69,7 +69,7 @@ export default async function HistoryPage() {
     <div className="min-h-screen">
       <header className="flex h-14 items-center justify-between border-b px-6">
         <Link href="/" className="font-bold tracking-tight no-underline">
-          🔎 Meta Tag
+          📈 MadRank
         </Link>
         <ThemeToggle />
       </header>

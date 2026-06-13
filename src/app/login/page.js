@@ -9,7 +9,7 @@ import { currentUser } from "@/lib/auth/session";
 import { isAuthConfigured } from "@/lib/auth/google";
 import { PLANS } from "@/lib/auth/plan";
 
-export const metadata = { title: "Sign in — Meta Tag" };
+export const metadata = { title: "Sign in — MadRank" };
 export const dynamic = "force-dynamic";
 
 const ERRORS = {
@@ -33,7 +33,7 @@ export default async function LoginPage({ searchParams }) {
     <div className="min-h-screen">
       <header className="flex h-14 items-center justify-between border-b px-6">
         <Link href="/" className="font-bold tracking-tight no-underline">
-          🔎 Meta Tag
+          📈 MadRank
         </Link>
         <ThemeToggle />
       </header>

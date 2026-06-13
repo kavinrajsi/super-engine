@@ -4,7 +4,7 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
-# Project: Meta Tag — SEO & AI-search audit
+# Project: MadRank — SEO & AI-search audit
 
 A per-URL SEO + AI-search auditor with a Semrush-style dashboard. **JavaScript, not TypeScript.** Next.js 16 (App Router, React 19, React Compiler, Turbopack) + Tailwind v4 + shadcn/ui. Deployed on Vercel (team scope `madarth`, project `meta-tag`, prod https://superengine.vercel.app).
 

@@ -33,8 +33,8 @@ export default function AppSidebar({ active, onSelect, issueCount = 0, pro = tru
     <Sidebar>
       <SidebarHeader>
         <div className="flex items-center gap-2 px-2 py-1.5 text-base font-bold">
-          <span aria-hidden="true">🔎</span>
-          <span>Meta Tag</span>
+          <span aria-hidden="true">📈</span>
+          <span>MadRank</span>
         </div>
       </SidebarHeader>
       <SidebarContent>

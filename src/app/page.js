@@ -14,7 +14,7 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       <header className="flex h-14 items-center justify-between border-b px-6">
-        <span className="font-bold tracking-tight">🔎 Meta Tag</span>
+        <span className="font-bold tracking-tight">📈 MadRank</span>
         <div className="flex items-center gap-4">
           <Link
             href="/history"

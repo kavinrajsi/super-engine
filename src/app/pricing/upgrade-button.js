@@ -52,7 +52,7 @@ export default function UpgradeButton() {
       const rzp = new window.Razorpay({
         key: json.keyId,
         subscription_id: json.subscriptionId,
-        name: "Meta Tag",
+        name: "MadRank",
         description: "Pro subscription",
         handler: async () => {
           setState("activating");
