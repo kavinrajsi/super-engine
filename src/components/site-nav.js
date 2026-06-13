@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 
 const LINKS = [
+  { href: "/compare", label: "Compare" },
   { href: "/history", label: "History" },
   { href: "/search-console", label: "Search Console" },
   { href: "/google-updates", label: "Algorithm updates" },
