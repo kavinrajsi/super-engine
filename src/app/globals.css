@@ -74,18 +74,28 @@ a:hover {
 .container {
   max-width: 1080px;
   margin: 0 auto;
-  padding: 32px 24px 80px;
+  padding: 24px 16px 64px;
 }
 
 /* ---- Home / hero ---- */
 .hero {
-  min-height: 70vh;
+  min-height: 56vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
   gap: 12px;
+}
+
+/* Roomier spacing once there's screen real estate. */
+@media (min-width: 640px) {
+  .container {
+    padding: 32px 24px 80px;
+  }
+  .hero {
+    min-height: 70vh;
+  }
 }
 /* ---- Results ---- */
 .topbar {

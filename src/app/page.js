@@ -1,7 +1,6 @@
 // Home page: a single URL input that kicks off a scan.
 // Plain GET form -> /scan?url=...&deep=... so it works without client JS.
 
-import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,37 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import ThemeToggle from "@/components/theme-toggle";
 import UserMenu from "@/components/user-menu";
+import SiteNav from "@/components/site-nav";
 
 export default function Home() {
   return (
     <div className="min-h-screen">
-      <header className="flex h-14 items-center justify-between border-b px-6">
+      <header className="flex h-14 items-center justify-between border-b px-4 sm:px-6">
         <span className="font-bold tracking-tight">📈 MadRank</span>
-        <div className="flex items-center gap-4">
-          <Link
-            href="/history"
-            className="text-sm font-medium text-muted-foreground no-underline hover:text-foreground"
-          >
-            History
-          </Link>
-          <Link
-            href="/search-console"
-            className="text-sm font-medium text-muted-foreground no-underline hover:text-foreground"
-          >
-            Search Console
-          </Link>
-          <Link
-            href="/google-updates"
-            className="text-sm font-medium text-muted-foreground no-underline hover:text-foreground"
-          >
-            Algorithm updates
-          </Link>
-          <Link
-            href="/pricing"
-            className="text-sm font-medium text-muted-foreground no-underline hover:text-foreground"
-          >
-            Pricing
-          </Link>
+        <div className="flex items-center gap-2 sm:gap-4">
+          <SiteNav />
           <ThemeToggle />
           <UserMenu />
         </div>
@@ -47,7 +24,7 @@ export default function Home() {
 
       <div className="container">
         <div className="hero">
-          <h1 className="text-4xl font-bold tracking-tight">
+          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
             Audit any website&rsquo;s SEO
           </h1>
           <p className="max-w-xl text-muted-foreground">

@@ -86,10 +86,16 @@ export default function ScanDashboard({ result, exportHref, reportHref, shareTok
           <div className="min-w-0 flex-1 truncate text-sm font-medium" title={result.rootUrl}>
             {result.rootUrl}
           </div>
-          <a href={exportHref} className={buttonVariants({ variant: "outline", size: "sm" })}>
+          <a
+            href={exportHref}
+            className={buttonVariants({ variant: "outline", size: "sm", className: "hidden sm:inline-flex" })}
+          >
             CSV
           </a>
-          <a href={reportHref} className={buttonVariants({ variant: "outline", size: "sm" })}>
+          <a
+            href={reportHref}
+            className={buttonVariants({ variant: "outline", size: "sm", className: "hidden sm:inline-flex" })}
+          >
             JSON
           </a>
           <ShareButton shareToken={shareToken} />
