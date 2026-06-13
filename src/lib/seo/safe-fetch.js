@@ -128,6 +128,67 @@ export async function safeFetch(input, { timeoutMs = DEFAULT_TIMEOUT_MS } = {}) 
   }
 }
 
+// Return the www/apex counterpart of a URL as a validated URL, or null.
+// "https://madarth.com" -> "https://www.madarth.com" and vice-versa.
+function toggleWww(url) {
+  const u = new URL(url.toString());
+  u.hostname = u.hostname.startsWith("www.") ? u.hostname.slice(4) : `www.${u.hostname}`;
+  try {
+    return assertSafeUrl(u.toString());
+  } catch {
+    return null;
+  }
+}
+
+// Resolve the canonical URL for user input by following HTTP redirects (e.g.
+// apex -> www, http -> https). We only need the final URL + status, so the
+// body is cancelled rather than downloaded. SSRF-safe: every candidate and
+// every post-redirect URL is re-validated. If the entered host doesn't respond
+// at all, the www/apex variant is tried once before giving up. Returns
+// { url, status } or null when nothing resolved. (HTTP 3xx only — JS/meta
+// refresh redirects are not followed.)
+export async function resolveUrl(input, { timeoutMs = 8_000 } = {}) {
+  const probe = async (u) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetch(u, {
+        signal: controller.signal,
+        redirect: "follow",
+        headers: { "User-Agent": USER_AGENT, Accept: "text/html,application/xhtml+xml,application/xml" },
+      });
+      // Re-validate the final URL in case redirects pointed somewhere internal.
+      assertSafeUrl(res.url || u.toString());
+      // We only need the final URL + status, not the body.
+      try {
+        await res.body?.cancel();
+      } catch {
+        /* body already consumed/closed */
+      }
+      return { url: res.url || u.toString(), status: res.status };
+    } finally {
+      clearTimeout(timer);
+    }
+  };
+
+  const first = assertSafeUrl(input);
+  try {
+    // A reachable-but-blocking host (e.g. 403) still resolves — keep it.
+    return await probe(first);
+  } catch {
+    // Host didn't respond (DNS/connection failure) — try the www/apex variant.
+    const alt = toggleWww(first);
+    if (alt) {
+      try {
+        return await probe(alt);
+      } catch {
+        /* variant also failed */
+      }
+    }
+    return null;
+  }
+}
+
 function concatChunks(chunks, total) {
   const out = new Uint8Array(total);
   let offset = 0;

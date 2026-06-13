@@ -105,6 +105,13 @@ export default function ScanDashboard({ result, exportHref, reportHref, shareTok
         </header>
 
         <main className="flex-1 p-4 md:p-6">
+          {result.redirected && (
+            <p className="mb-4 text-xs text-muted-foreground">
+              Scanned <span className="font-medium text-foreground">{result.rootUrl}</span> —
+              redirected from{" "}
+              <span className="font-mono">{new URL(result.requestedUrl).host}</span>.
+            </p>
+          )}
           {active === "overview" && <OverviewPanel result={result} onSelect={setActive} />}
           {active === "pages" && <PagesPanel result={result} pro={pro} />}
           {active === "issues" && <IssuesPanel result={result} />}

@@ -9,7 +9,7 @@
 // (durable background jobs + headless escalation + Neon persistence) reuses
 // these same building blocks — see masterplan phases 2–3.
 
-import { safeFetch } from "./safe-fetch";
+import { safeFetch, resolveUrl } from "./safe-fetch";
 import { fetchSitemap } from "./sitemap";
 import { extractSignals } from "./extract";
 import { scorePage } from "./rules";
@@ -91,8 +91,20 @@ async function analyzeRendered(url) {
 }
 
 // Main entry. Returns a complete scan result object.
-export async function runScan(rootUrl, { deepScan = false, maxPages = MAX_PAGES_SYNC } = {}) {
+export async function runScan(inputUrl, { deepScan = false, maxPages = MAX_PAGES_SYNC } = {}) {
   const pageCap = Math.min(maxPages || MAX_PAGES_SYNC, MAX_PAGES_SYNC);
+
+  // Resolve the canonical root by following redirects (apex -> www, http ->
+  // https) before any site-level fetch, so the sitemap/robots/llms checks and
+  // the displayed root all target the origin the site actually serves. Falls
+  // back to the entered URL when nothing resolves.
+  const requestedUrl = inputUrl;
+  let rootUrl = inputUrl;
+  const resolved = await resolveUrl(inputUrl);
+  if (resolved?.url) rootUrl = resolved.url;
+  // Compare origins (not full URLs) so a bare trailing slash isn't a "redirect".
+  const redirected = new URL(rootUrl).origin !== new URL(requestedUrl).origin;
+
   // Sitemap discovery and the site-level AI checks are independent — fetch both
   // at once.
   const [sitemap, aiSite] = await Promise.all([
@@ -174,6 +186,8 @@ export async function runScan(rootUrl, { deepScan = false, maxPages = MAX_PAGES_
   const missingSet = new Set(missingFromSitemap);
   return {
     rootUrl,
+    requestedUrl,
+    redirected,
     deepScan,
     sitemap: {
       found: sitemap.found,
