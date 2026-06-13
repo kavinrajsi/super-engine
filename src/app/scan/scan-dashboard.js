@@ -98,6 +98,12 @@ export default function ScanDashboard({ result, exportHref, reportHref, shareTok
           >
             JSON
           </a>
+          <a
+            href={`${reportHref}&format=md`}
+            className={buttonVariants({ variant: "outline", size: "sm", className: "hidden sm:inline-flex" })}
+          >
+            MD
+          </a>
           <ShareButton shareToken={shareToken} />
           <Link href="/" className={buttonVariants({ size: "sm" })}>
             New scan
