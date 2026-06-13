@@ -8,7 +8,7 @@
 // practices). It is versioned so we can evolve thresholds and layer in the
 // AI/GEO rules later without breaking stored results.
 
-export const RULES_VERSION = "seo-classic-v1";
+export const RULES_VERSION = "seo-classic-v2";
 
 // Recommended length windows (characters) per common SEO guidance.
 const TITLE_MIN = 30;
@@ -220,6 +220,87 @@ function twitterRules(s) {
   return out;
 }
 
+// Deeper on-page checks. All guard on optional signals so older stored results
+// (scanned before these signals existed) simply produce no findings.
+function imageRules(s) {
+  const total = s.images?.total ?? 0;
+  const missing = s.images?.missingAlt ?? 0;
+  if (total > 0 && missing > 0) {
+    return [
+      {
+        category: "seo",
+        ruleKey: "images.alt_missing",
+        severity: "warning",
+        message: `${missing} of ${total} images are missing alt text.`,
+        recommendation:
+          'Add descriptive alt text to meaningful images (use alt="" only for purely decorative ones).',
+      },
+    ];
+  }
+  return [];
+}
+
+function headingOrderRules(s) {
+  if ((s.headings?.skips ?? 0) > 0) {
+    return [
+      {
+        category: "seo",
+        ruleKey: "headings.skipped",
+        severity: "info",
+        message: "Heading levels skip a step (e.g. an <h2> jumps straight to <h4>).",
+        recommendation: "Use headings in order (h1 → h2 → h3) so the document outline is clear.",
+      },
+    ];
+  }
+  return [];
+}
+
+function hreflangRules(s) {
+  if ((s.hreflang?.count ?? 0) > 0 && !s.hreflang?.xDefault) {
+    return [
+      {
+        category: "seo",
+        ruleKey: "hreflang.no_xdefault",
+        severity: "info",
+        message: "hreflang annotations are present but there is no x-default.",
+        recommendation: "Add an x-default hreflang for visitors whose language/region isn't listed.",
+      },
+    ];
+  }
+  return [];
+}
+
+function mixedContentRules(s) {
+  if ((s.mixedContent ?? 0) > 0) {
+    return [
+      {
+        category: "seo",
+        ruleKey: "content.mixed",
+        severity: "warning",
+        message: `${s.mixedContent} resource(s) load over insecure http:// on an https page.`,
+        recommendation: "Serve all images, scripts and styles over https to avoid mixed-content blocking.",
+      },
+    ];
+  }
+  return [];
+}
+
+function linkProfileRules(s) {
+  const total = s.links?.total ?? 0;
+  if (total > 300) {
+    return [
+      {
+        category: "seo",
+        ruleKey: "links.excessive",
+        severity: "info",
+        message: `Page has ${total} links — an unusually high number.`,
+        recommendation: "Trim excessive on-page links so crawl signals and link equity stay focused.",
+      },
+    ];
+  }
+  return [];
+}
+
 const ALL_RULE_FNS = [
   titleRules,
   descriptionRules,
@@ -228,6 +309,11 @@ const ALL_RULE_FNS = [
   technicalRules,
   openGraphRules,
   twitterRules,
+  imageRules,
+  headingOrderRules,
+  hreflangRules,
+  mixedContentRules,
+  linkProfileRules,
 ];
 
 // Weight per severity, used to compute a 0–100 health score.

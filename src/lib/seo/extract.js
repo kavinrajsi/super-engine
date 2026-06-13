@@ -86,6 +86,63 @@ export function extractSignals(html, pageUrl) {
     wordCount: bodyText ? bodyText.split(" ").length : 0,
   };
 
+  // --- Deeper on-page checks (accessibility / i18n / security / link profile) ---
+  // Images missing alt text. An explicit alt="" is a valid "decorative" marker,
+  // so only count images with no alt attribute at all.
+  const imgs = $("img");
+  let imagesMissingAlt = 0;
+  imgs.each((_, el) => {
+    if ($(el).attr("alt") === undefined) imagesMissingAlt += 1;
+  });
+
+  // Heading hierarchy: flag outlines that skip a level (e.g. h2 → h4).
+  const headingLevels = $("h1, h2, h3, h4, h5, h6")
+    .map((_, el) => Number((el.tagName || el.name || "").slice(1)))
+    .get()
+    .filter(Boolean);
+  let headingSkips = 0;
+  for (let i = 1; i < headingLevels.length; i++) {
+    if (headingLevels[i] - headingLevels[i - 1] > 1) headingSkips += 1;
+  }
+
+  // hreflang annotations (international targeting).
+  const hreflangs = $('link[rel="alternate"][hreflang]')
+    .map((_, el) => ($(el).attr("hreflang") || "").trim().toLowerCase())
+    .get()
+    .filter(Boolean);
+
+  // Mixed content: insecure http:// sub-resources on an https page.
+  const isHttps = /^https:/i.test(pageUrl || "");
+  let mixedContent = 0;
+  if (isHttps) {
+    $("img[src], script[src], link[href], iframe[src], video[src], audio[src], source[src]").each((_, el) => {
+      const ref = $(el).attr("src") || $(el).attr("href") || "";
+      if (/^http:\/\//i.test(ref)) mixedContent += 1;
+    });
+  }
+
+  // Internal vs external link counts (skip in-page/non-navigational hrefs).
+  let origin = null;
+  try {
+    origin = new URL(pageUrl).origin;
+  } catch {
+    /* relative/invalid pageUrl */
+  }
+  let linksInternal = 0;
+  let linksExternal = 0;
+  $("a[href]").each((_, el) => {
+    const href = ($(el).attr("href") || "").trim();
+    if (!href || /^(#|mailto:|tel:|javascript:)/i.test(href)) return;
+    let abs;
+    try {
+      abs = new URL(href, pageUrl);
+    } catch {
+      return;
+    }
+    if (origin && abs.origin === origin) linksInternal += 1;
+    else linksExternal += 1;
+  });
+
   return {
     title,
     titleLength: title ? title.length : 0,
@@ -119,6 +176,14 @@ export function extractSignals(html, pageUrl) {
 
     structuredData,
     aiGeo,
+
+    // Deeper on-page checks
+    images: { total: imgs.length, missingAlt: imagesMissingAlt },
+    headings: { count: headingLevels.length, skips: headingSkips },
+    hreflang: { count: hreflangs.length, xDefault: hreflangs.includes("x-default") },
+    mixedContent,
+    links: { internal: linksInternal, external: linksExternal, total: linksInternal + linksExternal },
+
     // Analytics / heatmap trackers detected in the page HTML.
     analytics: {
       tools: detectTrackers(html),

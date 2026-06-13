@@ -138,6 +138,28 @@ export const EXPLANATIONS = {
     what: "Your robots.txt blocks AI crawlers (like GPTBot or Google-Extended).",
     why: "Blocked crawlers can't read your site, so you won't show up in AI answers — confirm that's intended.",
   },
+
+  // --- Deeper on-page checks ---
+  "images.alt_missing": {
+    what: "Some images have no alt text — the written description of what the image shows.",
+    why: "Screen-reader users and search engines can't tell what those images are, hurting accessibility and image search.",
+  },
+  "headings.skipped": {
+    what: "The page's headings jump levels (for example, an H2 is followed directly by an H4).",
+    why: "An out-of-order outline confuses assistive tech and makes the page structure harder for search engines to follow.",
+  },
+  "hreflang.no_xdefault": {
+    what: "The page lists language/region versions (hreflang) but has no x-default fallback.",
+    why: "Visitors whose language isn't listed get no clear default version, which can send them to the wrong page.",
+  },
+  "content.mixed": {
+    what: "A secure (https) page loads some files over insecure http.",
+    why: "Browsers may block those files or warn visitors, breaking parts of the page and denting trust.",
+  },
+  "links.excessive": {
+    what: "The page has an unusually large number of links.",
+    why: "Too many links dilute the importance passed to each one and can read as spammy to search engines.",
+  },
 };
 
 export function explain(ruleKey) {
