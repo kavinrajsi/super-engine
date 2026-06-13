@@ -11,6 +11,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/s
 
 const LINKS = [
   { href: "/compare", label: "Compare" },
+  { href: "/monitors", label: "Monitors" },
   { href: "/history", label: "History" },
   { href: "/search-console", label: "Search Console" },
   { href: "/google-updates", label: "Algorithm updates" },

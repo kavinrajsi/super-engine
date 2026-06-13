@@ -5,8 +5,8 @@
 import { sql } from "../db";
 
 export const PLANS = {
-  free: { label: "Free", scansPerDay: 3, maxPages: 10, deepScan: false, premium: false, history: false },
-  pro: { label: "Pro", scansPerDay: 100, maxPages: 40, deepScan: true, premium: true, history: true },
+  free: { label: "Free", scansPerDay: 3, maxPages: 10, deepScan: false, premium: false, history: false, monitors: 0 },
+  pro: { label: "Pro", scansPerDay: 100, maxPages: 40, deepScan: true, premium: true, history: true, monitors: 10 },
 };
 
 // Display prices for the pricing page (INR). These must match the amounts on
