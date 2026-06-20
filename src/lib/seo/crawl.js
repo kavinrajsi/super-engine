@@ -32,7 +32,12 @@ export async function crawlForMissingUrls(rootUrl, sitemapUrlSet) {
 
   const seen = new Set();
   const discovered = new Set();
-  const queue = [{ url: normalize(rootUrl) || rootUrl, depth: 0 }];
+  const rootNorm = normalize(rootUrl) || rootUrl;
+  const queue = [{ url: rootNorm, depth: 0 }];
+  // Internal-link graph: shortest click-depth from the root + inbound-link counts
+  // (how many crawled pages link to each URL) for orphan / top-linked analysis.
+  const depthByUrl = { [rootNorm]: 0 };
+  const inboundCounts = {};
 
   while (queue.length && seen.size < MAX_CRAWL_PAGES) {
     const { url, depth } = queue.shift();
@@ -50,6 +55,7 @@ export async function crawlForMissingUrls(rootUrl, sitemapUrlSet) {
     }
     if (res.status >= 400 || !/html/i.test(res.contentType)) continue;
 
+    const linkedThisPage = new Set(); // count each target at most once per source
     const $ = cheerio.load(res.body);
     $("a[href]").each((_, el) => {
       const href = $(el).attr("href");
@@ -63,7 +69,13 @@ export async function crawlForMissingUrls(rootUrl, sitemapUrlSet) {
       }
       if (new URL(abs).origin !== origin) return; // same-origin only
       const norm = normalize(abs);
-      if (norm && !seen.has(norm)) queue.push({ url: norm, depth: depth + 1 });
+      if (!norm || norm === url) return;
+      if (!linkedThisPage.has(norm)) {
+        linkedThisPage.add(norm);
+        inboundCounts[norm] = (inboundCounts[norm] || 0) + 1;
+      }
+      if (depthByUrl[norm] == null) depthByUrl[norm] = depth + 1;
+      if (!seen.has(norm)) queue.push({ url: norm, depth: depth + 1 });
     });
   }
 
@@ -74,5 +86,6 @@ export async function crawlForMissingUrls(rootUrl, sitemapUrlSet) {
     crawled: seen.size,
     capped: seen.size >= MAX_CRAWL_PAGES,
     missing,
+    graph: { root: rootNorm, discovered: [...discovered], depthByUrl, inboundCounts },
   };
 }

@@ -80,36 +80,53 @@ export default function SnapshotCards({ result, onSelect }) {
       .catch((e) => setPerf({ status: "error", score: null, error: e.message }));
   }, [url]);
 
-  // Backlinks: cheap configured-check (no-op today). Free to auto-load.
+  // Backlinks/SERP are PAID once a provider is wired — only do a cheap capability
+  // probe on render (?check=1, no provider call); the real fetch is button-gated.
   useEffect(() => {
     if (!url) return;
-    setBacklinks({ status: "loading", data: null });
-    fetch(`/api/seo/backlinks?url=${encodeURIComponent(url)}`)
+    setBacklinks({ status: "done", data: null });
+    fetch(`/api/seo/backlinks?url=${encodeURIComponent(url)}&check=1`)
       .then((r) => r.json())
       .then((j) => setBacklinks({ status: "done", data: j }))
       .catch(() => setBacklinks({ status: "done", data: { configured: false } }));
   }, [url]);
 
-  // SERP: pass candidate keywords; no-op today.
   useEffect(() => {
     if (!url) return;
-    setSerp({ status: "loading", data: null });
-    fetch(`/api/seo/serp?url=${encodeURIComponent(url)}&keywords=${encodeURIComponent(keywords.join(","))}`)
+    setSerp({ status: "done", data: null });
+    fetch(`/api/seo/serp?url=${encodeURIComponent(url)}&check=1`)
       .then((r) => r.json())
       .then((j) => setSerp({ status: "done", data: j }))
       .catch(() => setSerp({ status: "done", data: { configured: false } }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url]);
+
+  // Button-triggered paid fetches.
+  function loadBacklinks() {
+    setBacklinks((s) => ({ ...s, status: "loading" }));
+    fetch(`/api/seo/backlinks?url=${encodeURIComponent(url)}`)
+      .then((r) => r.json())
+      .then((j) => setBacklinks({ status: "done", data: j }))
+      .catch((e) => setBacklinks({ status: "done", data: { configured: true, error: e.message } }));
+  }
+  function loadSerp() {
+    setSerp((s) => ({ ...s, status: "loading" }));
+    fetch(`/api/seo/serp?url=${encodeURIComponent(url)}&keywords=${encodeURIComponent(keywords.join(","))}`)
+      .then((r) => r.json())
+      .then((j) => setSerp({ status: "done", data: j }))
+      .catch((e) => setSerp({ status: "done", data: { configured: true, error: e.message } }));
+  }
 
   const bl = backlinks.data;
   const blConfigured = bl?.configured;
+  const blLoaded = !!bl?.summary;
   const sp = serp.data;
   const spConfigured = sp?.configured;
+  const spLoaded = !!sp?.results;
 
   const perfValue =
     perf.status === "loading" ? "…" : perf.status === "error" ? "—" : perf.score ?? "—";
-  const referring = blConfigured ? bl.summary?.referringDomains ?? "—" : "—";
-  const ranked = spConfigured ? (sp.results || []).filter((r) => r.found).length : "—";
+  const referring = blLoaded ? bl.summary?.referringDomains ?? "—" : "—";
+  const ranked = spLoaded ? (sp.results || []).filter((r) => r.found).length : "—";
 
   return (
     <Card>
@@ -129,8 +146,8 @@ export default function SnapshotCards({ result, onSelect }) {
             <button type="button" onClick={() => onSelect?.("performance")} className="text-left">
               <MetricTile label="Performance" value={perfValue} sub="PageSpeed (mobile)" />
             </button>
-            <MetricTile label="Referring domains" value={referring} sub={blConfigured ? "backlinks" : "not connected"} />
-            <MetricTile label="Keywords ranked" value={ranked} sub={spConfigured ? `of ${keywords.length} checked` : "not connected"} />
+            <MetricTile label="Referring domains" value={referring} sub={blLoaded ? "backlinks" : blConfigured ? "load below" : "not connected"} />
+            <MetricTile label="Keywords ranked" value={ranked} sub={spLoaded ? `of ${keywords.length} checked` : spConfigured ? "load below" : "not connected"} />
           </div>
         </div>
 
@@ -142,7 +159,21 @@ export default function SnapshotCards({ result, onSelect }) {
 
         {/* Backlinks + SERP detail */}
         <div className="grid gap-6 lg:grid-cols-2">
-          {blConfigured ? (
+          {blConfigured && !blLoaded ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Backlinks</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  {bl?.error ? bl.error : "Fetch referring domains, backlinks, and domain rating from your provider."}
+                </p>
+                <Button size="sm" onClick={loadBacklinks} disabled={backlinks.status === "loading"}>
+                  {backlinks.status === "loading" ? "Loading…" : "Load backlinks"}
+                </Button>
+              </CardContent>
+            </Card>
+          ) : blConfigured ? (
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Backlinks</CardTitle>
@@ -189,7 +220,25 @@ export default function SnapshotCards({ result, onSelect }) {
             />
           )}
 
-          {spConfigured ? (
+          {spConfigured && !spLoaded ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Live SERP</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  {sp?.error
+                    ? sp.error
+                    : keywords.length
+                      ? `Check live Google rank for ${keywords.length} keyword(s) from this page.`
+                      : "No keywords detected on this page to rank-check."}
+                </p>
+                <Button size="sm" onClick={loadSerp} disabled={serp.status === "loading" || !keywords.length}>
+                  {serp.status === "loading" ? "Loading…" : "Load live rank"}
+                </Button>
+              </CardContent>
+            </Card>
+          ) : spConfigured ? (
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">

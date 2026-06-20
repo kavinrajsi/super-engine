@@ -1,51 +1,81 @@
 // Sampled broken-link checker for the Links tab.
 //
 // Takes a list of absolute http(s) URLs (collected by extractSignals) and probes
-// a capped sample with a HEAD request through the SSRF-guarded fetch path. Some
-// servers reject HEAD, so a 405/501 falls back to a lightweight GET. Returns one
-// row per probed link: { url, status, ok }. Everything is best-effort — a failed
-// probe is reported as ok:false rather than throwing.
+// a capped sample, following redirects manually so each 3xx hop is recorded
+// (SSRF-re-validated per hop). Some servers reject HEAD, so a 405/501 falls back
+// to GET. Returns one row per probed link:
+//   { url, status, ok, finalUrl, redirectChain:[{status, location}] }
+// Everything is best-effort — a failed probe is reported as ok:false, not thrown.
 
 import { assertSafeUrl } from "./safe-fetch";
 
 const USER_AGENT =
   "MetaTagSEOBot/0.1 (+https://example.com/bot; on-page SEO audit)";
+const MAX_HOPS = 5;
+
+async function requestOnce(url, method, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, {
+      method,
+      signal: controller.signal,
+      redirect: "manual", // we follow hops ourselves to record the chain
+      headers: { "User-Agent": USER_AGENT },
+    });
+    try {
+      await res.body?.cancel();
+    } catch {
+      /* already closed */
+    }
+    return res;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 async function probeOne(url, timeoutMs) {
-  let safe;
+  let current;
   try {
-    safe = assertSafeUrl(url); // skip internal/blocked targets entirely
+    current = assertSafeUrl(url).toString(); // skip internal/blocked targets
   } catch {
     return null;
   }
-
-  const run = async (method) => {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-    try {
-      const res = await fetch(safe, {
-        method,
-        signal: controller.signal,
-        redirect: "follow",
-        headers: { "User-Agent": USER_AGENT },
-      });
-      try {
-        await res.body?.cancel();
-      } catch {
-        /* already closed */
-      }
-      return res.status;
-    } finally {
-      clearTimeout(timer);
-    }
-  };
+  const startUrl = current;
+  const redirectChain = [];
 
   try {
-    let status = await run("HEAD");
-    if (status === 405 || status === 501) status = await run("GET");
-    return { url: safe.toString(), status, ok: status < 400 };
+    for (let hop = 0; hop <= MAX_HOPS; hop++) {
+      let res = await requestOnce(current, "HEAD", timeoutMs);
+      if (res.status === 405 || res.status === 501) {
+        res = await requestOnce(current, "GET", timeoutMs);
+      }
+      const status = res.status;
+
+      // Redirect: record the hop and follow the Location (re-validated for SSRF).
+      if (status >= 300 && status < 400 && hop < MAX_HOPS) {
+        const loc = res.headers.get("location");
+        if (loc) {
+          let next;
+          try {
+            next = assertSafeUrl(new URL(loc, current).toString()).toString();
+          } catch {
+            // Unsafe/invalid redirect target — treat the 3xx as the final status.
+            redirectChain.push({ status, location: loc });
+            return { url: startUrl, status, ok: false, finalUrl: current, redirectChain };
+          }
+          redirectChain.push({ status, location: next });
+          current = next;
+          continue;
+        }
+      }
+
+      return { url: startUrl, status, ok: status < 400, finalUrl: current, redirectChain };
+    }
+    // Too many hops — redirect loop.
+    return { url: startUrl, status: 310, ok: false, finalUrl: current, redirectChain };
   } catch {
-    return { url: safe.toString(), status: 0, ok: false };
+    return { url: startUrl, status: 0, ok: false, finalUrl: current, redirectChain };
   }
 }
 

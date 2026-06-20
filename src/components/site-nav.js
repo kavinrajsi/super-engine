@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 
 const LINKS = [
+  { href: "/competitors", label: "Competitors" },
   { href: "/compare", label: "Compare" },
   { href: "/monitors", label: "Monitors" },
   { href: "/history", label: "History" },

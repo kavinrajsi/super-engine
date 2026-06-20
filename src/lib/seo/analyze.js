@@ -41,6 +41,27 @@ async function mapPool(items, concurrency, worker) {
   return results;
 }
 
+// Derive internal-link-structure insights from the crawler's graph: orphan pages
+// (crawled but with no inbound internal links), click-depth distribution, and the
+// most internally-linked pages. Returns null when there's no usable graph.
+function buildInternalGraph(graph) {
+  if (!graph || !graph.discovered?.length) return null;
+  const { root, discovered, depthByUrl = {}, inboundCounts = {} } = graph;
+
+  const orphans = discovered.filter((u) => u !== root && !inboundCounts[u]);
+  const topLinked = Object.entries(inboundCounts)
+    .map(([url, inbound]) => ({ url, inbound }))
+    .sort((a, b) => b.inbound - a.inbound)
+    .slice(0, 10);
+
+  const depths = discovered.map((u) => depthByUrl[u]).filter((d) => d != null);
+  const maxDepth = depths.length ? Math.max(...depths) : 0;
+  const depthHistogram = {};
+  for (const d of depths) depthHistogram[d] = (depthHistogram[d] || 0) + 1;
+
+  return { pages: discovered.length, orphans, maxDepth, depthHistogram, topLinked };
+}
+
 function looksJsRendered(signals) {
   // Heuristic used later to decide headless escalation: an empty <head> on a
   // 200 page often means the meta is injected client-side. Recorded now so the
@@ -126,10 +147,12 @@ export async function runScan(inputUrl, { deepScan = false, maxPages = MAX_PAGES
 
   const sitemapUrls = sitemap.urls.map((u) => u.url);
   let missingFromSitemap = [];
+  let internalGraph = null;
 
   if (deepScan) {
     const crawl = await crawlForMissingUrls(rootUrl, new Set(sitemapUrls));
     missingFromSitemap = crawl.missing;
+    internalGraph = buildInternalGraph(crawl.graph);
   }
 
   // Pages to analyze = the root URL (always) + sitemap URLs + any
@@ -171,15 +194,31 @@ export async function runScan(inputUrl, { deepScan = false, maxPages = MAX_PAGES
     rendered: headlessRendered,
   };
 
-  // Broken-link sample: probe a capped set of the root page's links only (one
-  // page's worth keeps a full multi-page scan from fanning out hundreds of
-  // requests). Best-effort — failures just mean an empty/short sample.
+  // Site-wide broken-link health: aggregate outbound link targets across all
+  // analyzed pages, dedupe, cap, and probe once (following redirects to record
+  // chains). Best-effort — failures just mean an empty/short sample.
   const rootPage = pages.find((p) => p.url === rootUrl && p.signals) || pages.find((p) => p.signals);
-  if (rootPage?.signals?.linkUrls?.length) {
+  const allLinkUrls = [...new Set(pages.flatMap((p) => p.signals?.linkUrls || []))];
+  let linkHealth = null;
+  if (allLinkUrls.length) {
+    let sample = [];
     try {
-      rootPage.signals.linkSample = await probeLinks(rootPage.signals.linkUrls);
+      sample = await probeLinks(allLinkUrls, { cap: 40 });
     } catch {
-      rootPage.signals.linkSample = [];
+      sample = [];
+    }
+    linkHealth = {
+      checked: sample.length,
+      broken: sample.filter((r) => !r.ok).length,
+      redirected: sample.filter((r) => r.redirectChain?.length).length,
+      sample,
+    };
+    if (rootPage?.signals) {
+      rootPage.signals.linkSample = sample; // back-compat for the Links tab table
+      rootPage.signals.linkHealth = linkHealth; // lets rules.js score broken links
+      // Re-score the root page now that link health is known, so broken-link
+      // issues reach the Issues panel and the site score (runs before siteScore).
+      rootPage.audit = scorePage(rootPage.signals);
     }
   }
 
@@ -230,6 +269,8 @@ export async function runScan(inputUrl, { deepScan = false, maxPages = MAX_PAGES
     redirected,
     deepScan,
     contentSummary,
+    linkHealth,
+    internalGraph,
     sitemap: {
       found: sitemap.found,
       sources: sitemap.sources,

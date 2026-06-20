@@ -118,3 +118,27 @@ export async function latestSerpSnapshot(domain, maxAgeMins = 1440) {
   }
 }
 
+export async function saveCompetitorSnapshot({ domain, data }) {
+  if (!sql || !domain || !data) return;
+  try {
+    await sql`
+      INSERT INTO competitor_snapshots (domain, data)
+      VALUES (${domain}, ${JSON.stringify(data)}::jsonb)`;
+  } catch {
+    /* best-effort */
+  }
+}
+
+export async function latestCompetitorSnapshot(domain, maxAgeMins = 1440) {
+  if (!sql || !domain) return null;
+  try {
+    const rows = await sql`
+      SELECT data FROM competitor_snapshots
+      WHERE domain = ${domain} AND created_at > now() - make_interval(mins => ${maxAgeMins})
+      ORDER BY created_at DESC LIMIT 1`;
+    return rows[0]?.data || null;
+  } catch {
+    return null;
+  }
+}
+

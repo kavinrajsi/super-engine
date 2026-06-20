@@ -301,6 +301,33 @@ function linkProfileRules(s) {
   return [];
 }
 
+// Broken / redirecting outbound links from the sampled link-health probe. Only
+// the root page carries `linkHealth` (site-wide aggregate), so this fires once.
+function linkHealthRules(s) {
+  const lh = s.linkHealth;
+  if (!lh || !lh.checked) return [];
+  const out = [];
+  if (lh.broken > 0) {
+    out.push({
+      category: "seo",
+      ruleKey: "links.broken",
+      severity: lh.broken >= 3 ? "error" : "warning",
+      message: `${lh.broken} of ${lh.checked} checked outbound link(s) are broken (4xx/5xx/unreachable).`,
+      recommendation: "Fix or remove broken links — they waste crawl budget and hurt user trust.",
+    });
+  }
+  if (lh.redirected > 0) {
+    out.push({
+      category: "seo",
+      ruleKey: "links.redirect_chain",
+      severity: "info",
+      message: `${lh.redirected} of ${lh.checked} checked link(s) go through a redirect.`,
+      recommendation: "Point links at their final URLs to avoid extra hops and lost link equity.",
+    });
+  }
+  return out;
+}
+
 const ALL_RULE_FNS = [
   titleRules,
   descriptionRules,
@@ -314,6 +341,7 @@ const ALL_RULE_FNS = [
   hreflangRules,
   mixedContentRules,
   linkProfileRules,
+  linkHealthRules,
 ];
 
 // Weight per severity, used to compute a 0–100 health score.

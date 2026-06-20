@@ -10,7 +10,9 @@
 // creds) and implement/enable its branch in fetchBacklinks. A DataForSEO
 // reference impl is included but inactive until DATAFORSEO_LOGIN/PASSWORD exist.
 
-import { safeFetch } from "./safe-fetch";
+import { dfsPost, domainOf, num } from "./dataforseo";
+
+export { domainOf }; // re-export for existing importers
 
 // Which provider to use. Explicit env wins; otherwise infer from creds present.
 export function backlinksProvider() {
@@ -21,16 +23,6 @@ export function backlinksProvider() {
 
 export function isBacklinksConfigured() {
   return !!backlinksProvider();
-}
-
-// Reduce a URL/host to the registrable-ish domain the provider expects.
-export function domainOf(input) {
-  try {
-    const u = new URL(/^https?:\/\//i.test(input) ? input : `https://${input}`);
-    return u.hostname.replace(/^www\./, "");
-  } catch {
-    return String(input || "").replace(/^www\./, "");
-  }
 }
 
 // Normalized shape every provider maps onto.
@@ -45,22 +37,35 @@ function emptySummary() {
   };
 }
 
-// --- DataForSEO reference impl (inactive until creds exist) ---------------
 async function fetchDataForSeo(domain) {
-  const auth = Buffer.from(
-    `${process.env.DATAFORSEO_LOGIN}:${process.env.DATAFORSEO_PASSWORD}`
-  ).toString("base64");
-  // Backlinks Summary (live). Endpoint shape per DataForSEO v3.
-  const res = await safeFetch("https://api.dataforseo.com/v3/backlinks/summary/live", {
-    timeoutMs: 30_000,
-  }).catch(() => null);
-  // NOTE: safeFetch is GET-only; the real call is POST with a JSON task body +
-  // Authorization: Basic <auth>. This branch is intentionally left as a wiring
-  // point — flesh out the POST when enabling the provider. For now, signal that
-  // the provider is selected but returned nothing usable.
-  void auth;
-  void res;
-  return { ...emptySummary(), topReferrers: [] };
+  // Headline summary + a short referring-domains list, in parallel.
+  const [summary, refDomains] = await Promise.all([
+    dfsPost("/backlinks/summary/live", { target: domain, internal_list_limit: 0, backlinks_status_type: "live" }),
+    dfsPost("/backlinks/referring_domains/live", {
+      target: domain,
+      limit: 10,
+      order_by: ["rank,desc"],
+      backlinks_status_type: "live",
+    }).catch(() => null),
+  ]);
+
+  const attrs = summary?.referring_links_attributes || {};
+  const data = {
+    referringDomains: num(summary?.referring_domains),
+    backlinks: num(summary?.backlinks),
+    dofollow: num(attrs.dofollow ?? summary?.referring_domains_nofollow != null
+      ? num(summary?.referring_domains) - num(summary?.referring_domains_nofollow)
+      : null),
+    nofollow: num(attrs.nofollow ?? summary?.referring_domains_nofollow),
+    domainRating: num(summary?.rank),
+    rank: num(summary?.rank),
+  };
+
+  const topReferrers = (refDomains?.items || [])
+    .map((it) => ({ domain: it.domain, backlinks: num(it.backlinks), rank: num(it.rank) }))
+    .filter((r) => r.domain);
+
+  return { ...data, topReferrers };
 }
 
 // Fetch backlink data for a domain. Returns { configured, provider, fetchedAt,

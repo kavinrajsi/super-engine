@@ -135,6 +135,9 @@ export function extractSignals(html, pageUrl) {
   // Collect a capped set of unique absolute http(s) link targets so the scan can
   // probe a sample for broken links (the actual fetching happens in analyze.js).
   const linkUrls = new Set();
+  // Outbound (external) link quality: rel attributes + anchor text.
+  const outboundQuality = { dofollow: 0, nofollow: 0, sponsored: 0, ugc: 0, emptyAnchor: 0 };
+  const externalSample = [];
   $("a[href]").each((_, el) => {
     const href = ($(el).attr("href") || "").trim();
     if (!href || /^(#|mailto:|tel:|javascript:)/i.test(href)) return;
@@ -144,11 +147,25 @@ export function extractSignals(html, pageUrl) {
     } catch {
       return;
     }
-    if (origin && abs.origin === origin) linksInternal += 1;
-    else linksExternal += 1;
+    const isExternal = !origin || abs.origin !== origin;
+    if (isExternal) linksExternal += 1;
+    else linksInternal += 1;
     if (/^https?:$/i.test(abs.protocol) && linkUrls.size < 50) {
       abs.hash = "";
       linkUrls.add(abs.toString());
+    }
+
+    if (isExternal && /^https?:$/i.test(abs.protocol)) {
+      const rel = ($(el).attr("rel") || "").toLowerCase();
+      const anchor = $(el).text().replace(/\s+/g, " ").trim();
+      if (/\bnofollow\b/.test(rel)) outboundQuality.nofollow += 1;
+      else outboundQuality.dofollow += 1;
+      if (/\bsponsored\b/.test(rel)) outboundQuality.sponsored += 1;
+      if (/\bugc\b/.test(rel)) outboundQuality.ugc += 1;
+      if (!anchor) outboundQuality.emptyAnchor += 1;
+      if (externalSample.length < 25) {
+        externalSample.push({ url: abs.toString(), anchor, rel: rel || null });
+      }
     }
   });
 
@@ -235,6 +252,8 @@ export function extractSignals(html, pageUrl) {
     mixedContent,
     links: { internal: linksInternal, external: linksExternal, total: linksInternal + linksExternal },
     linkUrls: [...linkUrls],
+    outboundQuality,
+    externalSample,
 
     // Technical-tab signals
     renderBlocking: { scripts: blockingScripts, stylesheets: blockingStylesheets },

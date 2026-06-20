@@ -23,6 +23,12 @@ export async function GET(request) {
     return Response.json({ configured: false });
   }
 
+  // Cheap capability probe — lets the UI show a "Load" button without spending a
+  // paid provider call on render.
+  if (searchParams.get("check") === "1") {
+    return Response.json({ configured: true, loaded: false });
+  }
+
   const domain = domainOf(rawUrl);
   try {
     if (!force) {

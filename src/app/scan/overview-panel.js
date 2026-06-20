@@ -43,6 +43,15 @@ function scoreColor(s) {
   return "var(--error)";
 }
 
+function shortPath(u) {
+  try {
+    const x = new URL(u);
+    return x.pathname === "/" ? x.host : x.pathname + x.search;
+  } catch {
+    return u;
+  }
+}
+
 export default function OverviewPanel({ result, onSelect }) {
   const pages = result.pages;
   const ai = result.aiReadiness;
@@ -156,6 +165,66 @@ export default function OverviewPanel({ result, onSelect }) {
           </Alert>
         )}
       </div>
+
+      {/* Internal link structure (deep scan only) */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Internal link structure</CardTitle>
+          <CardDescription>Orphan pages, click-depth, and most-linked pages</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!result.internalGraph ? (
+            <p className="text-sm text-muted-foreground">
+              Run a deep scan to map internal links (orphan pages, click-depth, top-linked pages).
+            </p>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="rounded-lg border p-3">
+                  <div className="text-2xl font-bold tabular-nums">{result.internalGraph.pages}</div>
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground">Pages crawled</div>
+                </div>
+                <div className="rounded-lg border p-3">
+                  <div className={`text-2xl font-bold tabular-nums ${result.internalGraph.orphans.length ? "text-warning" : ""}`}>
+                    {result.internalGraph.orphans.length}
+                  </div>
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground">Orphan pages</div>
+                </div>
+                <div className="rounded-lg border p-3">
+                  <div className="text-2xl font-bold tabular-nums">{result.internalGraph.maxDepth}</div>
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground">Max click-depth</div>
+                </div>
+              </div>
+              {result.internalGraph.topLinked?.length > 0 && (
+                <div>
+                  <div className="mb-1 text-xs font-medium text-muted-foreground">Most internally-linked</div>
+                  <ul className="space-y-1 text-sm">
+                    {result.internalGraph.topLinked.slice(0, 5).map((p) => (
+                      <li key={p.url} className="flex items-center justify-between gap-3">
+                        <span className="min-w-0 truncate" title={p.url}>{shortPath(p.url)}</span>
+                        <span className="shrink-0 text-muted-foreground">{p.inbound} links</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {result.internalGraph.orphans.length > 0 && (
+                <div>
+                  <div className="mb-1 text-xs font-medium text-muted-foreground">Orphan pages (no internal links in)</div>
+                  <ul className="space-y-1 text-sm">
+                    {result.internalGraph.orphans.slice(0, 5).map((u) => (
+                      <li key={u} className="truncate text-warning" title={u}>{shortPath(u)}</li>
+                    ))}
+                    {result.internalGraph.orphans.length > 5 && (
+                      <li className="text-xs text-muted-foreground">+{result.internalGraph.orphans.length - 5} more</li>
+                    )}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
