@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { questsFromIssues } from "@/lib/seo/gamify";
 import ScoreRing from "./score-ring";
+import SnapshotCards from "./snapshot-cards";
 
 const SEV_BADGE = { error: "destructive", warning: "secondary", info: "outline" };
 
@@ -62,6 +63,9 @@ export default function OverviewPanel({ result, onSelect }) {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
+      {/* Consolidated site health snapshot — SEO score, performance, backlinks, SERP */}
+      <SnapshotCards result={result} onSelect={onSelect} />
+
       {/* AI search readiness — first */}
       <Card>
         <CardHeader>

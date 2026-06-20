@@ -68,3 +68,53 @@ export async function savePerformanceRun({ url, strategy, result }) {
   }
 }
 
+// --- Backlinks / SERP snapshots (external provider, TTL-reused) ---
+
+export async function saveBacklinksSnapshot({ domain, provider, data }) {
+  if (!sql || !domain || !data) return;
+  try {
+    await sql`
+      INSERT INTO backlinks_snapshots (domain, provider, data)
+      VALUES (${domain}, ${provider || null}, ${JSON.stringify(data)}::jsonb)`;
+  } catch {
+    /* best-effort */
+  }
+}
+
+export async function latestBacklinksSnapshot(domain, maxAgeMins = 1440) {
+  if (!sql || !domain) return null;
+  try {
+    const rows = await sql`
+      SELECT data FROM backlinks_snapshots
+      WHERE domain = ${domain} AND created_at > now() - make_interval(mins => ${maxAgeMins})
+      ORDER BY created_at DESC LIMIT 1`;
+    return rows[0]?.data || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function saveSerpSnapshot({ domain, provider, data }) {
+  if (!sql || !domain || !data) return;
+  try {
+    await sql`
+      INSERT INTO serp_snapshots (domain, provider, data)
+      VALUES (${domain}, ${provider || null}, ${JSON.stringify(data)}::jsonb)`;
+  } catch {
+    /* best-effort */
+  }
+}
+
+export async function latestSerpSnapshot(domain, maxAgeMins = 1440) {
+  if (!sql || !domain) return null;
+  try {
+    const rows = await sql`
+      SELECT data FROM serp_snapshots
+      WHERE domain = ${domain} AND created_at > now() - make_interval(mins => ${maxAgeMins})
+      ORDER BY created_at DESC LIMIT 1`;
+    return rows[0]?.data || null;
+  } catch {
+    return null;
+  }
+}
+
