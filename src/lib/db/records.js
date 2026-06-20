@@ -38,6 +38,24 @@ export async function saveGscConnection({ sessionId, email, properties }) {
   }
 }
 
+// One row per GA4 (Analytics) report pull (history + trends over time).
+export async function saveGaReport({ sessionId, email, property, days, report }) {
+  if (!sql || !report) return;
+  try {
+    await sql`
+      INSERT INTO ga_reports
+        (session_id, email, property, days, range_start, range_end, active_users, sessions, report)
+      VALUES (
+        ${sessionId || null}, ${email || null}, ${property}, ${days},
+        ${report.range?.startDate || null}, ${report.range?.endDate || null},
+        ${Math.round(report.totals?.activeUsers || 0)}, ${Math.round(report.totals?.sessions || 0)},
+        ${JSON.stringify(report)}::jsonb
+      )`;
+  } catch {
+    /* best-effort */
+  }
+}
+
 // One row per PageSpeed test run.
 export async function savePerformanceRun({ url, strategy, result }) {
   if (!sql || !result) return;

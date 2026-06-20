@@ -158,7 +158,7 @@ export default function GscDashboard({ email }) {
 
   async function disconnect() {
     await fetch("/api/gsc/disconnect", { method: "POST" });
-    window.location.href = "/search-console";
+    window.location.href = "/seo";
   }
 
   const t = report?.totals;

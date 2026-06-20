@@ -6,7 +6,7 @@ import { isGscConfigured, exchangeCode, redirectUri, emailFromIdToken } from "@/
 import { saveTokens, newSessionId } from "@/lib/gsc/tokens";
 
 function back(origin, params) {
-  const url = new URL("/search-console", origin);
+  const url = new URL("/seo", origin);
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
   return Response.redirect(url);
 }

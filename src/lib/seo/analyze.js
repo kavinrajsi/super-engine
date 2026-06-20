@@ -17,6 +17,7 @@ import { crawlForMissingUrls } from "./crawl";
 import { scoreAiReadiness, buildAiReadiness } from "./ai-rules";
 import { fetchAiSiteContext } from "./ai-site";
 import { renderHtml, isHeadlessAvailable } from "./headless";
+import { probeLinks } from "./links-probe";
 
 // Keep request-time scans fast and within function limits.
 export const MAX_PAGES_SYNC = 40;
@@ -55,6 +56,7 @@ async function analyzeOne(url) {
     }
     const signals = extractSignals(res.body, res.url);
     signals.robotsHeader = res.xRobotsTag || null; // robots from the HTTP header
+    signals.domNodesApprox = true; // fetch mode misses JS-injected nodes
     const audit = scorePage(signals);
     const needsHeadless = looksJsRendered(signals);
     const aiAudit = scoreAiReadiness(signals, { needsHeadless });
@@ -63,6 +65,15 @@ async function analyzeOne(url) {
       httpStatus: res.status,
       renderMode: "fetch",
       needsHeadless,
+      // Response-level technical signals (headers, size, phase timings).
+      response: {
+        server: res.server,
+        contentEncoding: res.contentEncoding,
+        cacheControl: res.cacheControl,
+        cacheable: res.cacheable,
+        byteSize: res.byteSize,
+        timings: res.timings,
+      },
       signals,
       audit,
       aiAudit,
@@ -79,6 +90,7 @@ async function analyzeRendered(url) {
   if (!html) return null;
   const signals = extractSignals(html, url);
   signals.robotsHeader = null; // headless path has no response headers
+  signals.domNodesApprox = false; // rendered DOM — node count is accurate
   return {
     httpStatus: 200,
     renderMode: "headless",
@@ -159,6 +171,18 @@ export async function runScan(inputUrl, { deepScan = false, maxPages = MAX_PAGES
     rendered: headlessRendered,
   };
 
+  // Broken-link sample: probe a capped set of the root page's links only (one
+  // page's worth keeps a full multi-page scan from fanning out hundreds of
+  // requests). Best-effort — failures just mean an empty/short sample.
+  const rootPage = pages.find((p) => p.url === rootUrl && p.signals) || pages.find((p) => p.signals);
+  if (rootPage?.signals?.linkUrls?.length) {
+    try {
+      rootPage.signals.linkSample = await probeLinks(rootPage.signals.linkUrls);
+    } catch {
+      rootPage.signals.linkSample = [];
+    }
+  }
+
   // Roll up a site-level health score from per-page scores.
   const scored = pages.filter((p) => p.audit);
   const siteScore = scored.length
@@ -183,12 +207,29 @@ export async function runScan(inputUrl, { deepScan = false, maxPages = MAX_PAGES
     heatmapTools: tools.filter((t) => t.heatmap),
   };
 
+  // Site-level content summary rolled up from the representative (root) page, so
+  // the SEO/Technical tabs can show headline cards without re-deriving in the UI.
+  const summarySignals = rootPage?.signals || null;
+  const contentSummary = summarySignals
+    ? {
+        contentRatioPct: summarySignals.contentRatioPct ?? null,
+        readabilityGrade: summarySignals.readability?.grade ?? null,
+        readabilityEase: summarySignals.readability?.ease ?? null,
+        relevanceScore: summarySignals.relevance?.score ?? null,
+        wordCount: summarySignals.aiGeo?.wordCount ?? null,
+        domNodes: summarySignals.domNodes ?? null,
+        byteSize: rootPage?.response?.byteSize ?? null,
+        timings: rootPage?.response?.timings ?? null,
+      }
+    : null;
+
   const missingSet = new Set(missingFromSitemap);
   return {
     rootUrl,
     requestedUrl,
     redirected,
     deepScan,
+    contentSummary,
     sitemap: {
       found: sitemap.found,
       sources: sitemap.sources,

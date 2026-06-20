@@ -79,12 +79,29 @@ export function assertSafeUrl(input) {
   return url;
 }
 
+// Derive a coarse "is this response cacheable?" flag from Cache-Control.
+// Public/long-lived without no-store/no-cache/private counts as cacheable.
+function isCacheable(cacheControl) {
+  if (!cacheControl) return false;
+  const cc = cacheControl.toLowerCase();
+  if (/no-store|no-cache|private/.test(cc)) return false;
+  const maxAge = cc.match(/max-age=(\d+)/);
+  return /public/.test(cc) || (maxAge && Number(maxAge[1]) > 0);
+}
+
 // Fetch with SSRF guard, timeout, size cap and a polite User-Agent.
-// Returns { url, status, contentType, body } or throws.
+// Returns { url, status, contentType, xRobotsTag, body, server, contentEncoding,
+// cacheControl, cacheable, byteSize, timings } or throws. The header/size/timing
+// fields support the Technical tab; phase timings are coarse (undici doesn't
+// expose a TCP/TLS split), so we report TTFB (request → first byte), download,
+// and total only.
 export async function safeFetch(input, { timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
   const url = assertSafeUrl(input);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  const startedAt = performance.now();
+  let firstByteAt = null;
 
   try {
     const res = await fetch(url, {
@@ -103,6 +120,7 @@ export async function safeFetch(input, { timeoutMs = DEFAULT_TIMEOUT_MS } = {}) 
       for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
+        if (firstByteAt === null) firstByteAt = performance.now();
         received += value.length;
         if (received > MAX_BYTES) {
           controller.abort();
@@ -112,16 +130,28 @@ export async function safeFetch(input, { timeoutMs = DEFAULT_TIMEOUT_MS } = {}) 
       }
     }
 
+    const endedAt = performance.now();
     const body = new TextDecoder("utf-8").decode(
       chunks.length ? concatChunks(chunks, received) : new Uint8Array()
     );
 
+    const cacheControl = res.headers.get("cache-control") || null;
     return {
       url: res.url || url.toString(),
       status: res.status,
       contentType: res.headers.get("content-type") || "",
       xRobotsTag: res.headers.get("x-robots-tag") || null,
       body,
+      server: res.headers.get("server") || null,
+      contentEncoding: res.headers.get("content-encoding") || null,
+      cacheControl,
+      cacheable: isCacheable(cacheControl),
+      byteSize: received,
+      timings: {
+        ttfbMs: Math.round((firstByteAt ?? endedAt) - startedAt),
+        downloadMs: Math.round(endedAt - (firstByteAt ?? endedAt)),
+        totalMs: Math.round(endedAt - startedAt),
+      },
     };
   } finally {
     clearTimeout(timer);

@@ -39,6 +39,34 @@ export async function getScanByToken(token) {
   }
 }
 
+// Most recent saved scan for a URL within the last `maxAgeMins`, scoped to the
+// user (or anonymous rows when userId is null). Powers the /seo dashboard's
+// "reuse a recent audit instead of re-scanning on every property switch".
+//
+// `urls` is one URL or a list of candidates (the stored `url` is the canonical
+// rootUrl, which can differ from the requested URL after a www/https redirect —
+// the caller passes the likely variants so the cache still hits).
+export async function latestScanForUrl(urls, userId = null, maxAgeMins = 60) {
+  const candidates = (Array.isArray(urls) ? urls : [urls]).filter(Boolean);
+  if (!sql || !candidates.length) return null;
+  try {
+    const rows = userId
+      ? await sql`
+          SELECT result FROM scans
+          WHERE url = ANY(${candidates}) AND user_id = ${userId}
+            AND created_at > now() - make_interval(mins => ${maxAgeMins})
+          ORDER BY created_at DESC LIMIT 1`
+      : await sql`
+          SELECT result FROM scans
+          WHERE url = ANY(${candidates}) AND user_id IS NULL
+            AND created_at > now() - make_interval(mins => ${maxAgeMins})
+          ORDER BY created_at DESC LIMIT 1`;
+    return rows[0]?.result || null;
+  } catch {
+    return null;
+  }
+}
+
 // Recent scans for one user (history is a Pro feature, scoped per user).
 export async function recentScans(userId, limit = 30) {
   if (!sql || !userId) return [];

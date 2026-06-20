@@ -5,6 +5,8 @@
 
 import * as cheerio from "cheerio";
 import { detectTrackers, clarityProjectId } from "./trackers";
+import { fleschReadingEase } from "./readability";
+import { contentRelevance } from "./relevance";
 
 function metaContent($, selector) {
   const v = $(selector).attr("content");
@@ -130,6 +132,9 @@ export function extractSignals(html, pageUrl) {
   }
   let linksInternal = 0;
   let linksExternal = 0;
+  // Collect a capped set of unique absolute http(s) link targets so the scan can
+  // probe a sample for broken links (the actual fetching happens in analyze.js).
+  const linkUrls = new Set();
   $("a[href]").each((_, el) => {
     const href = ($(el).attr("href") || "").trim();
     if (!href || /^(#|mailto:|tel:|javascript:)/i.test(href)) return;
@@ -141,6 +146,52 @@ export function extractSignals(html, pageUrl) {
     }
     if (origin && abs.origin === origin) linksInternal += 1;
     else linksExternal += 1;
+    if (/^https?:$/i.test(abs.protocol) && linkUrls.size < 50) {
+      abs.hash = "";
+      linkUrls.add(abs.toString());
+    }
+  });
+
+  // --- Technical-tab signals (headings, render-blocking, density, DOM size) ---
+  const byLevel = { h1: 0, h2: 0, h3: 0, h4: 0, h5: 0, h6: 0 };
+  for (const lvl of headingLevels) byLevel[`h${lvl}`] += 1;
+
+  // Render-blocking head resources: parser-blocking scripts (no defer/async/
+  // module) and synchronous stylesheets in <head>.
+  const blockingScripts = head
+    .find("script[src]")
+    .filter((_, el) => {
+      const a = el.attribs || {};
+      return a.defer === undefined && a.async === undefined && a.type !== "module";
+    }).length;
+  const blockingStylesheets = head.find('link[rel="stylesheet"]').length;
+
+  // Content-to-code ratio: visible text length vs. raw HTML length.
+  const contentRatio = html.length ? bodyText.length / html.length : 0;
+
+  // DOM node count (approximate in fetch mode — JS-rendered nodes are absent
+  // unless this HTML came from the headless renderer).
+  const domNodes = $("*").length;
+
+  // Lightweight HTML "resource issues": duplicate ids + images without alt.
+  // cheerio/htmlparser2 doesn't surface mismatched-tag warnings cleanly, so we
+  // stick to a couple of high-signal, cheap checks.
+  const idCounts = new Map();
+  $("[id]").each((_, el) => {
+    const id = $(el).attr("id");
+    if (id) idCounts.set(id, (idCounts.get(id) || 0) + 1);
+  });
+  const duplicateIds = [...idCounts.values()].filter((n) => n > 1).length;
+  const htmlIssues = [];
+  if (duplicateIds) htmlIssues.push({ type: "duplicate-id", count: duplicateIds });
+  if (imagesMissingAlt) htmlIssues.push({ type: "img-missing-alt", count: imagesMissingAlt });
+
+  const readability = fleschReadingEase(bodyText);
+  const relevance = contentRelevance({
+    title,
+    metaDescription: metaContent($, 'meta[name="description"]'),
+    metaKeywords: metaContent($, 'meta[name="keywords"]'),
+    bodyText,
   });
 
   return {
@@ -179,10 +230,20 @@ export function extractSignals(html, pageUrl) {
 
     // Deeper on-page checks
     images: { total: imgs.length, missingAlt: imagesMissingAlt },
-    headings: { count: headingLevels.length, skips: headingSkips },
+    headings: { count: headingLevels.length, skips: headingSkips, byLevel },
     hreflang: { count: hreflangs.length, xDefault: hreflangs.includes("x-default") },
     mixedContent,
     links: { internal: linksInternal, external: linksExternal, total: linksInternal + linksExternal },
+    linkUrls: [...linkUrls],
+
+    // Technical-tab signals
+    renderBlocking: { scripts: blockingScripts, stylesheets: blockingStylesheets },
+    contentRatio,
+    contentRatioPct: Math.round(contentRatio * 1000) / 10,
+    domNodes,
+    htmlIssues,
+    readability,
+    relevance,
 
     // Analytics / heatmap trackers detected in the page HTML.
     analytics: {

@@ -8,9 +8,12 @@
 const AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth";
 const TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
 
-// Read-only Search Console access, plus identity for a friendly "connected as".
+// Read-only Search Console + Google Analytics (GA4) access, plus identity for a
+// friendly "connected as". One unified consent powers the combined /seo page.
+// NOTE: adding analytics.readonly changes the consent — already-connected users
+// must reconnect once to grant the new scope (prompt:"consent" handles that).
 export const GSC_SCOPE =
-  "https://www.googleapis.com/auth/webmasters.readonly openid email";
+  "https://www.googleapis.com/auth/webmasters.readonly https://www.googleapis.com/auth/analytics.readonly openid email";
 
 export function isGscConfigured() {
   return !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
