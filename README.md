@@ -65,7 +65,7 @@ All optional — the app degrades gracefully (no DB → audits just aren't saved
 | `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` | Google sign-in **and** Analytics + Search Console | One Web OAuth client. Register **both** redirect URIs: `…/api/auth/callback` and `…/api/gsc/callback`. GSC/GA scopes (`webmasters.readonly` + `analytics.readonly`) are sensitive → only test users until verified. |
 | `AUTH_REDIRECT_URI` / `GSC_REDIRECT_URI` | Override redirect URIs (optional) | Otherwise derived from the request origin. |
 | `DATAFORSEO_LOGIN` + `DATAFORSEO_PASSWORD` | Backlinks, live SERP, competitors | Without them those cards show "connect a provider". |
-| `RESEND_API_KEY` | Monitor alert emails | Used by the scheduled-monitor cron. |
+| `ZEPTOMAIL_TOKEN` + `ZEPTOMAIL_FROM` | Monitor alerts + daily digest emails | Zoho ZeptoMail "Send Mail Token" + a verified sender. Optional: `ZEPTOMAIL_FROM_NAME`, `ZEPTOMAIL_API_URL` (region DC, e.g. `https://api.zeptomail.in/v1.1/email`). |
 | `CRON_SECRET` | Monitor cron auth | Vercel Cron sends `Authorization: Bearer <CRON_SECRET>` to `…/api/cron/monitor`. |
 
 Add on Vercel with `vercel env add <NAME>`.
@@ -103,7 +103,7 @@ src/
     db.js, db/           Neon client + scans/profiles/content/ai-settings/monitors/records
     site/active.js       Active-site resolution
     rate-limit.js        Neon fixed-window rate limiter
-    email.js             Resend email (monitor alerts)
+    email.js             Zoho ZeptoMail email (monitor alerts + digest)
 db/schema.sql            DB DDL (gitignored)
 scripts/                 migrate*.mjs (base + feature migrations), verify-*.mjs
 ```
