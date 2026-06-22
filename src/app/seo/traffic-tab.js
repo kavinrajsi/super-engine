@@ -1,9 +1,10 @@
 "use client";
 
 // Traffic tab — the okara "how people found you" funnel + channel mix on top of
-// the full GA4 and Search Console dashboards (reused unchanged). The funnel is a
-// best-effort headline (auto-picked first site + property); the dashboards below
-// have their own property/site + date selectors for the detail.
+// the full GA4 and Search Console dashboards. Everything is scoped to the active
+// site: the parent resolves the matching GSC `site` + GA `property` and passes
+// them in, so the funnel and both dashboards show only that site's data (or a
+// notice when no property matches).
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -66,17 +67,24 @@ function FunnelCard({ funnel }) {
   );
 }
 
-export default function TrafficTab() {
+export default function TrafficTab({ email, domain, site, property, gscNoMatch, gaNoMatch }) {
   const [funnel, setFunnel] = useState(null);
 
+  // Scope the funnel to the active-site match. Skip the call entirely when
+  // neither half matched — nothing to show.
   useEffect(() => {
-    fetch("/api/seo/funnel?days=28")
+    setFunnel(null);
+    if (!site && !property) return;
+    const params = new URLSearchParams({ days: "28" });
+    if (site) params.set("site", site);
+    if (property) params.set("property", property);
+    fetch(`/api/seo/funnel?${params}`)
       .then((r) => r.json())
       .then((j) => {
         if (!j.error) setFunnel(j.funnel);
       })
       .catch(() => {});
-  }, []);
+  }, [site, property]);
 
   return (
     <div className="space-y-8">
@@ -84,12 +92,12 @@ export default function TrafficTab() {
 
       <section className="space-y-4">
         <h2 className="text-lg font-semibold">Search Console</h2>
-        <GscDashboard />
+        <GscDashboard email={email} domain={domain} site={site} noMatch={gscNoMatch} />
       </section>
 
       <section className="space-y-4">
         <h2 className="text-lg font-semibold">Analytics</h2>
-        <GaDashboard />
+        <GaDashboard email={email} domain={domain} property={property} noMatch={gaNoMatch} />
       </section>
     </div>
   );

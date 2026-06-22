@@ -11,8 +11,9 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/s
 import ThemeToggle from "@/components/theme-toggle";
 
 const LINKS = [
-  { href: "#features", label: "Features" },
   { href: "#ai-search", label: "AI search" },
+  { href: "#features", label: "Features" },
+  { href: "#how", label: "How it works" },
 ];
 
 export default function MarketingNav() {
@@ -21,18 +22,23 @@ export default function MarketingNav() {
   return (
     <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-        <Link href="/" className="flex items-center gap-2 font-bold tracking-tight no-underline">
-          <span aria-hidden="true">📈</span>
-          <span>MadRank</span>
+        <Link href="/" className="flex items-center gap-2 no-underline" aria-label="MadRank home">
+          <span
+            aria-hidden="true"
+            className="grid size-6 place-items-center rounded-[5px] bg-primary font-mono text-xs font-bold text-primary-foreground"
+          >
+            M
+          </span>
+          <span className="font-display text-base font-bold tracking-tight">MadRank</span>
         </Link>
 
         {/* Desktop */}
-        <nav className="hidden items-center gap-6 md:flex">
+        <nav className="hidden items-center gap-7 md:flex">
           {LINKS.map((l) => (
             <a
               key={l.href}
               href={l.href}
-              className="text-sm font-medium text-muted-foreground no-underline hover:text-foreground"
+              className="font-mono text-xs uppercase tracking-wider text-muted-foreground no-underline transition-colors hover:text-foreground"
             >
               {l.label}
             </a>

@@ -1,12 +1,13 @@
 // Combined "how people found you" funnel for the /seo Traffic tab: merges a
 // Search Console report (impressions/clicks) with a GA4 report (sessions/users +
-// channel mix). Auto-picks the first GSC site + first GA property when none is
-// given. Unified Google connection (gsc_session).
+// channel mix). Scoped to the active site — the caller passes the matched GSC
+// `site` and/or GA `property`; we never fall back to "the first one", so the
+// funnel can't show another site's numbers. Unified Google connection.
 
 import { cookies } from "next/headers";
 import { getValidAccessToken } from "@/lib/gsc/tokens";
-import { listSites, buildReport } from "@/lib/gsc/api";
-import { listProperties, buildGaReport, buildTrafficFunnel } from "@/lib/ga/api";
+import { buildReport } from "@/lib/gsc/api";
+import { buildGaReport, buildTrafficFunnel } from "@/lib/ga/api";
 
 export const maxDuration = 60;
 
@@ -25,15 +26,13 @@ export async function GET(request) {
     if (!auth) return Response.json({ error: "not_connected" }, { status: 401 });
     const token = auth.accessToken;
 
-    // Resolve a site + property (use explicit params, else the first available).
-    let site = searchParams.get("site");
-    let property = searchParams.get("property");
-    const [sites, properties] = await Promise.all([
-      site ? Promise.resolve([site]) : listSites(token).catch(() => []),
-      property ? Promise.resolve([{ property }]) : listProperties(token).catch(() => []),
-    ]);
-    if (!site) site = sites[0] || null;
-    if (!property) property = properties[0]?.property || null;
+    // Scope strictly to the active-site match the caller resolved. No fallback
+    // to "first site/property" — an absent param means that half has no data.
+    const site = searchParams.get("site") || null;
+    const property = searchParams.get("property") || null;
+    if (!site && !property) {
+      return Response.json({ error: "no_data", site, property, days });
+    }
 
     // Pull both reports in parallel (each tolerated as null).
     const [gscReport, gaReport] = await Promise.all([

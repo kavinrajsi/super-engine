@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
+import { useActiveSite } from "@/components/active-site-provider";
 
 const PLATFORMS = [
   { key: "instagram", label: "Instagram" },
@@ -58,6 +59,7 @@ function PostCard({ post }) {
 
 export default function PostIdeasClient() {
   const ph = usePostHog();
+  const { activeSite } = useActiveSite();
   const [profiles, setProfiles] = useState([]);
   const [profileId, setProfileId] = useState("");
   const [topic, setTopic] = useState("");
@@ -79,12 +81,30 @@ export default function PostIdeasClient() {
     }
   }
 
+  async function setStatus(id, status) {
+    try {
+      const res = await fetch(`/api/content/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (res.ok) {
+        setSaved((prev) => prev.map((it) => (it.id === id ? { ...it, status } : it)));
+      }
+    } catch {
+      /* best-effort */
+    }
+  }
+
   useEffect(() => {
     fetch("/api/profiles")
       .then((r) => r.json())
       .then((j) => {
-        setProfiles(j.profiles || []);
-        if (j.profiles?.[0]) setProfileId(j.profiles[0].id);
+        const list = j.profiles || [];
+        setProfiles(list);
+        // Default to the active site when set, else the first profile.
+        const preferred = list.find((p) => p.id === activeSite?.id) || list[0];
+        if (preferred) setProfileId(preferred.id);
       })
       .catch(() => {});
     fetch("/api/ai-settings")
@@ -206,25 +226,37 @@ export default function PostIdeasClient() {
           {saved.map((item) => (
             <Card key={item.id}>
               <CardContent className="py-4">
-                <button
-                  type="button"
-                  onClick={() => setOpenId(openId === item.id ? null : item.id)}
-                  className="flex w-full items-center justify-between gap-4 text-left"
-                >
-                  <span className="min-w-0">
-                    <span className="block font-medium">{item.topic}</span>
-                    <span className="block text-xs text-muted-foreground">
+                <div className="flex items-center justify-between gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setOpenId(openId === item.id ? null : item.id)}
+                    className="min-w-0 flex-1 text-left"
+                  >
+                    <span className="block truncate font-medium">{item.topic}</span>
+                    <span className="block truncate text-xs text-muted-foreground">
                       {(item.platforms || "")
                         .split(",")
                         .filter(Boolean)
                         .map((k) => PLATFORM_LABEL[k] || k)
                         .join(", ")}
                     </span>
-                  </span>
-                  <span className="shrink-0 text-xs text-muted-foreground">
-                    {new Date(item.created_at).toLocaleDateString()}
-                  </span>
-                </button>
+                  </button>
+                  <div className="flex shrink-0 items-center gap-2">
+                    {(item.status || "draft") === "approved" ? (
+                      <Badge variant="secondary">Approved</Badge>
+                    ) : (
+                      <>
+                        <Badge variant="outline">Draft</Badge>
+                        <Button size="xs" variant="outline" onClick={() => setStatus(item.id, "approved")}>
+                          Approve
+                        </Button>
+                      </>
+                    )}
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(item.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
                 {openId === item.id && item.data?.posts && (
                   <div className="mt-4 space-y-3">
                     {item.data.posts.map((post, i) => (

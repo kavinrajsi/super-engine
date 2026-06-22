@@ -3,7 +3,7 @@
 
 import { cookies } from "next/headers";
 import { getValidAccessToken } from "@/lib/gsc/tokens";
-import { listProperties } from "@/lib/ga/api";
+import { listPropertiesWithDomains } from "@/lib/ga/api";
 
 export async function GET() {
   const sessionId = (await cookies()).get("gsc_session")?.value;
@@ -12,7 +12,7 @@ export async function GET() {
   try {
     const auth = await getValidAccessToken(sessionId);
     if (!auth) return Response.json({ error: "not_connected" }, { status: 401 });
-    const properties = await listProperties(auth.accessToken);
+    const properties = await listPropertiesWithDomains(auth.accessToken);
     return Response.json({ email: auth.email, properties });
   } catch (e) {
     return Response.json({ error: e.message }, { status: 502 });

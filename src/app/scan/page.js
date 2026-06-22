@@ -8,6 +8,8 @@ import { redirect } from "next/navigation";
 import { assertSafeUrl } from "@/lib/seo/safe-fetch";
 import { runScan } from "@/lib/seo/analyze";
 import { saveScan } from "@/lib/db/scans";
+import { listProfiles, touchProfile, createProfile } from "@/lib/db/profiles";
+import { normalizeSiteUrl } from "@/lib/site/active";
 import { currentUser } from "@/lib/auth/session";
 import { isAuthConfigured } from "@/lib/auth/google";
 import { planOf } from "@/lib/auth/plan";
@@ -69,6 +71,27 @@ export default async function ScanPage({ searchParams }) {
     shareToken = await saveScan(result, user?.id ?? null);
   } catch {
     /* DB unavailable — continue without a share link */
+  }
+
+  // Remember the scanned site in the active-site store: bump it if it's already
+  // saved, otherwise add it (so it shows in the switcher and prefills the tools).
+  // Uses the canonical resolved URL. Best-effort — never blocks the scan render.
+  if (user) {
+    try {
+      const host = new URL(result.rootUrl).host.replace(/^www\./, "");
+      const profiles = await listProfiles(user.id);
+      const match = profiles.find((p) => {
+        const u = normalizeSiteUrl(p.website_url);
+        return u && u.host.replace(/^www\./, "") === host;
+      });
+      if (match) {
+        await touchProfile(match.id, user.id);
+      } else {
+        await createProfile(user.id, { name: host, websiteUrl: result.rootUrl });
+      }
+    } catch {
+      /* best-effort — never block the scan render */
+    }
   }
 
   return (

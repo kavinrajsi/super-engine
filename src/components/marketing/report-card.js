@@ -45,23 +45,24 @@ export default function ReportCard() {
   const t = useIntroProgress();
 
   return (
-    <div className="w-full max-w-md rounded-xl border bg-card p-5 shadow-sm sm:p-6">
-      {/* card header — reads like a tool readout */}
-      <div className="flex items-center justify-between gap-3 border-b pb-4">
-        <div className="flex items-center gap-2">
-          <span
-            className="size-2 animate-pulse rounded-full"
-            style={{ backgroundColor: "var(--pass)" }}
-            aria-hidden="true"
-          />
-          <span className="font-mono text-xs text-muted-foreground">audit · example.com</span>
-        </div>
-        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-          live
+    <div className="w-full max-w-md overflow-hidden rounded-xl border bg-card shadow-sm">
+      {/* inspector header bar — reads like a crawler readout */}
+      <div className="scanline flex items-center justify-between gap-3 border-b bg-muted/40 px-4 py-2.5">
+        <span className="truncate font-mono text-xs text-muted-foreground">
+          /audit example.com
+        </span>
+        <span className="flex shrink-0 items-center gap-2">
+          <span className="rounded border border-pass/30 bg-pass/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-pass">
+            200
+          </span>
+          <span className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            <span className="blink size-1.5 rounded-full bg-pass" aria-hidden="true" />
+            live
+          </span>
         </span>
       </div>
 
-      <div className="flex items-center gap-5 pt-5">
+      <div className="flex items-center gap-5 p-5 sm:p-6">
         <ScoreRing score={SEO * t} size={104} grade="A" />
         <div className="min-w-0">
           <div className="text-sm font-semibold">SEO health</div>
@@ -72,7 +73,7 @@ export default function ReportCard() {
       </div>
 
       {/* the four AI-search lenses */}
-      <div className="mt-5 space-y-3 border-t pt-5">
+      <div className="space-y-3 border-t px-5 py-5 sm:px-6">
         <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
           AI-search readiness
         </div>
@@ -98,7 +99,7 @@ export default function ReportCard() {
       </div>
 
       {/* AI crawler access */}
-      <div className="mt-5 flex flex-wrap items-center gap-1.5 border-t pt-4">
+      <div className="flex flex-wrap items-center gap-1.5 border-t px-5 py-4 sm:px-6">
         <span className="mr-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
           bots
         </span>

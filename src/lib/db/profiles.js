@@ -10,15 +10,52 @@ export async function listProfiles(userId = null) {
   try {
     return userId
       ? await sql`
-          SELECT id, name, website_url, markdown, created_at, updated_at
+          SELECT id, name, website_url, markdown, last_used_at, created_at, updated_at
           FROM brand_profiles WHERE user_id = ${userId}
           ORDER BY updated_at DESC`
       : await sql`
-          SELECT id, name, website_url, markdown, created_at, updated_at
+          SELECT id, name, website_url, markdown, last_used_at, created_at, updated_at
           FROM brand_profiles WHERE user_id IS NULL
           ORDER BY updated_at DESC`;
   } catch {
     return [];
+  }
+}
+
+// The active site = the profile the user most recently used (cross-device).
+// Falls back to the most-recently-updated profile before any has been "used".
+export async function getActiveProfile(userId = null) {
+  if (!sql) return null;
+  try {
+    const rows = userId
+      ? await sql`
+          SELECT id, name, website_url, markdown, last_used_at, created_at, updated_at
+          FROM brand_profiles WHERE user_id = ${userId}
+          ORDER BY last_used_at DESC NULLS LAST, updated_at DESC LIMIT 1`
+      : await sql`
+          SELECT id, name, website_url, markdown, last_used_at, created_at, updated_at
+          FROM brand_profiles WHERE user_id IS NULL
+          ORDER BY last_used_at DESC NULLS LAST, updated_at DESC LIMIT 1`;
+    return rows[0] || null;
+  } catch {
+    return null;
+  }
+}
+
+// Mark a profile as the active site (bumps last_used_at). Best-effort.
+export async function touchProfile(id, userId = null) {
+  if (!sql || !id) return false;
+  try {
+    const rows = userId
+      ? await sql`
+          UPDATE brand_profiles SET last_used_at = now()
+          WHERE id = ${id} AND user_id = ${userId} RETURNING id`
+      : await sql`
+          UPDATE brand_profiles SET last_used_at = now()
+          WHERE id = ${id} AND user_id IS NULL RETURNING id`;
+    return rows.length > 0;
+  } catch {
+    return false;
   }
 }
 
@@ -27,10 +64,10 @@ export async function getProfile(id, userId = null) {
   try {
     const rows = userId
       ? await sql`
-          SELECT id, name, website_url, markdown, created_at, updated_at
+          SELECT id, name, website_url, markdown, last_used_at, created_at, updated_at
           FROM brand_profiles WHERE id = ${id} AND user_id = ${userId} LIMIT 1`
       : await sql`
-          SELECT id, name, website_url, markdown, created_at, updated_at
+          SELECT id, name, website_url, markdown, last_used_at, created_at, updated_at
           FROM brand_profiles WHERE id = ${id} AND user_id IS NULL LIMIT 1`;
     return rows[0] || null;
   } catch {
@@ -42,9 +79,9 @@ export async function createProfile(userId, { name, websiteUrl = null, markdown 
   if (!sql) return null;
   try {
     const rows = await sql`
-      INSERT INTO brand_profiles (user_id, name, website_url, markdown)
-      VALUES (${userId}, ${name}, ${websiteUrl}, ${markdown})
-      RETURNING id, name, website_url, markdown, created_at, updated_at`;
+      INSERT INTO brand_profiles (user_id, name, website_url, markdown, last_used_at)
+      VALUES (${userId}, ${name}, ${websiteUrl}, ${markdown}, now())
+      RETURNING id, name, website_url, markdown, last_used_at, created_at, updated_at`;
     return rows[0] || null;
   } catch {
     return null;
@@ -59,12 +96,12 @@ export async function updateProfile(id, userId, { name, websiteUrl = null, markd
           UPDATE brand_profiles
           SET name = ${name}, website_url = ${websiteUrl}, markdown = ${markdown}, updated_at = now()
           WHERE id = ${id} AND user_id = ${userId}
-          RETURNING id, name, website_url, markdown, created_at, updated_at`
+          RETURNING id, name, website_url, markdown, last_used_at, created_at, updated_at`
       : await sql`
           UPDATE brand_profiles
           SET name = ${name}, website_url = ${websiteUrl}, markdown = ${markdown}, updated_at = now()
           WHERE id = ${id} AND user_id IS NULL
-          RETURNING id, name, website_url, markdown, created_at, updated_at`;
+          RETURNING id, name, website_url, markdown, last_used_at, created_at, updated_at`;
     return rows[0] || null;
   } catch {
     return null;

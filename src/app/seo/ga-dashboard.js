@@ -1,8 +1,11 @@
 "use client";
 
-// Connected Google Analytics (GA4) view: property + date-range selectors,
-// summary cards with period-over-period deltas, a users/sessions trend, and top
-// pages / channels / countries. Mirrors the Search Console dashboard.
+// Connected Google Analytics (GA4) view, locked to the active site. The parent
+// passes the matched `property` (resource name) — this view never picks its own.
+// When no property matches the active site (`noMatch`), it shows a notice
+// instead of another site's data. Keeps the date-range selector, summary cards
+// with period-over-period deltas, the trend, and top pages / channels /
+// countries. Mirrors the Search Console dashboard.
 
 import { useEffect, useState } from "react";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
@@ -115,31 +118,15 @@ function TopTable({ caption, label, rows, keyName, metricKey, metricLabel }) {
   );
 }
 
-export default function GaDashboard({ email }) {
-  const [props, setProps] = useState(null); // null = loading
-  const [property, setProperty] = useState("");
+export default function GaDashboard({ email, domain, property, noMatch }) {
   const [days, setDays] = useState(28);
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Load the property list once.
+  // Fetch the report whenever the active-site property or range changes.
   useEffect(() => {
-    fetch("/api/ga/properties")
-      .then((r) => r.json())
-      .then((j) => {
-        if (j.error) throw new Error(j.error);
-        setProps(j.properties || []);
-        setProperty((j.properties || [])[0]?.property || "");
-      })
-      .catch((e) => {
-        setProps([]);
-        setError(e.message);
-      });
-  }, []);
-
-  // Fetch the report whenever the property or range changes.
-  useEffect(() => {
+    setReport(null);
     if (!property) return;
     setLoading(true);
     setError(null);
@@ -156,26 +143,24 @@ export default function GaDashboard({ email }) {
   const t = report?.totals;
   const d = report?.deltas;
 
+  if (noMatch) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-start gap-2 py-6 text-sm text-muted-foreground">
+          <p className="font-medium text-foreground">No Analytics property connected for {domain}.</p>
+          <p>
+            Set up a GA4 property whose web data stream points to {domain} (with this Google account)
+            to see its traffic here.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Controls */}
       <div className="flex flex-wrap items-center gap-3">
-        <select
-          value={property}
-          onChange={(e) => setProperty(e.target.value)}
-          className="h-9 max-w-[20rem] rounded-md border bg-background px-3 text-sm"
-          disabled={!props || props.length === 0}
-        >
-          {props === null && <option>Loading properties…</option>}
-          {props?.length === 0 && <option>No GA4 properties found</option>}
-          {props?.map((p) => (
-            <option key={p.property} value={p.property}>
-              {p.displayName}
-              {p.account ? ` — ${p.account}` : ""}
-            </option>
-          ))}
-        </select>
-
         <div className="inline-flex rounded-md border p-0.5 text-xs">
           {RANGES.map((r) => (
             <button

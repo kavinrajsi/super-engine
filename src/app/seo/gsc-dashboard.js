@@ -1,8 +1,11 @@
 "use client";
 
-// Connected Search Console view: property + date-range selectors, summary cards
-// with period-over-period deltas, a clicks/impressions trend, top queries/pages,
-// and striking-distance opportunities.
+// Connected Search Console view, locked to the active site. The parent passes
+// the matched `site` (a GSC property string) — this view never picks its own.
+// When no property matches the active site (`noMatch`), it shows a notice
+// instead of another site's data. Keeps the date-range selector, summary cards
+// with period-over-period deltas, the trend, top queries/pages, and
+// striking-distance opportunities.
 
 import { useEffect, useState } from "react";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
@@ -118,31 +121,15 @@ function MetricTable({ caption, label, rows, keyName }) {
   );
 }
 
-export default function GscDashboard({ email }) {
-  const [sites, setSites] = useState(null); // null = loading
-  const [site, setSite] = useState("");
+export default function GscDashboard({ email, domain, site, noMatch }) {
   const [days, setDays] = useState(28);
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Load the property list once.
+  // Fetch the report whenever the active-site property or range changes.
   useEffect(() => {
-    fetch("/api/gsc/sites")
-      .then((r) => r.json())
-      .then((j) => {
-        if (j.error) throw new Error(j.error);
-        setSites(j.sites || []);
-        setSite((j.sites || [])[0] || "");
-      })
-      .catch((e) => {
-        setSites([]);
-        setError(e.message);
-      });
-  }, []);
-
-  // Fetch the report whenever the property or range changes.
-  useEffect(() => {
+    setReport(null);
     if (!site) return;
     setLoading(true);
     setError(null);
@@ -164,25 +151,26 @@ export default function GscDashboard({ email }) {
   const t = report?.totals;
   const d = report?.deltas;
 
+  if (noMatch) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-start gap-2 py-6 text-sm text-muted-foreground">
+          <p className="font-medium text-foreground">
+            No Search Console property connected for {domain}.
+          </p>
+          <p>
+            Add and verify {domain} in Google Search Console with this Google account to see its
+            queries, pages, and ranking opportunities here.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Controls */}
       <div className="flex flex-wrap items-center gap-3">
-        <select
-          value={site}
-          onChange={(e) => setSite(e.target.value)}
-          className="h-9 rounded-md border bg-background px-3 text-sm"
-          disabled={!sites || sites.length === 0}
-        >
-          {sites === null && <option>Loading properties…</option>}
-          {sites?.length === 0 && <option>No properties found</option>}
-          {sites?.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
-
         <div className="inline-flex rounded-md border p-0.5 text-xs">
           {RANGES.map((r) => (
             <button

@@ -40,6 +40,38 @@ export async function listProperties(token) {
   return out.sort((a, b) => a.displayName.localeCompare(b.displayName));
 }
 
+// The web URL a GA4 property tracks, used to match a property to the active
+// site. The reliable source is the property's web data stream
+// (webStreamData.defaultUri), NOT the human-set displayName. Returns the host
+// (e.g. "example.com") or null. Best-effort — never throws.
+export async function propertyDomain(token, property) {
+  if (!property) return null;
+  try {
+    const json = await gaFetch(ADMIN_BASE, token, `/${property}/dataStreams?pageSize=50`);
+    for (const s of json.dataStreams || []) {
+      const uri = s.webStreamData?.defaultUri;
+      if (!uri) continue;
+      try {
+        return new URL(/^https?:\/\//i.test(uri) ? uri : `https://${uri}`).hostname.replace(/^www\./, "");
+      } catch {
+        // ignore an unparseable stream URI; try the next stream
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// listProperties + a resolved `domain` per property (from its web data stream),
+// fetched in parallel. Used to auto-select the property matching the active
+// site. Each domain lookup is tolerated as null.
+export async function listPropertiesWithDomains(token) {
+  const properties = await listProperties(token);
+  const domains = await Promise.all(properties.map((p) => propertyDomain(token, p.property)));
+  return properties.map((p, i) => ({ ...p, domain: domains[i] }));
+}
+
 export function runReport(token, property, body) {
   // property is "properties/123456"; the Data API path is <property>:runReport.
   return gaFetch(DATA_BASE, token, `/${property}:runReport`, {
