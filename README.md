@@ -1,22 +1,30 @@
 # MadRank — SEO & AI-Search Audit
 
-A clean, Semrush-style SEO auditor that also grades a site for **AI search** (ChatGPT, Google AI Overviews, Perplexity). Enter a URL → it reads the sitemap, crawls pages, and reports on-page SEO, social tags, AI-readiness, trackers, performance, and more — with one-click AI fixes.
+A clean, Semrush-style SEO auditor that also grades a site for **AI search** (ChatGPT, Google AI Overviews, Perplexity, Claude, Gemini). Audit any URL → it reads the sitemap, crawls pages, and reports on-page SEO, social tags, AI-readiness, trackers, links, and performance — with one-click AI fixes — and pairs it with live Google Analytics + Search Console data.
 
 **Live:** https://superengine.vercel.app
 
 ## Features
 
-- **On-page SEO / SMO audit** — title, meta description, canonical, H1s, viewport, `lang`, robots (incl. `X-Robots-Tag` header), Open Graph + Twitter/X cards. Per-page score (0–100) + A–F grade with plain-language **What it means / Why it matters / How to fix**.
-- **AI search readiness** across four lenses — **AEO** (answer engines), **GEO** (generative/citability), **AIO** (AI Overviews), **AGO** (agent/crawler access) — plus **validator-grade `llms.txt` / `llms-full.txt` / `ai.txt`** checking (line-numbered findings) and AI-crawler robots policy.
+- **One unified audit dashboard at `/seo`** — type any URL (no Google needed) and get a 7-tab audit: **Traffic** (live GA4 + Search Console), **SEO**, **Pages**, **Links**, **Technical**, **GEO** (AI readiness), **Tracking**. Optional deep multi-page scan. (The old standalone `/scan` page was folded into `/seo`.)
+- **On-page SEO / SMO audit** — title, meta, canonical, H1s, viewport, `lang`, robots (incl. `X-Robots-Tag`), Open Graph + Twitter/X cards. Per-page score (0–100) + A–F grade with plain-language **What it means / Why it matters / How to fix**.
+- **AI search readiness** across four lenses — **AEO** (answer engines), **GEO** (citability), **AIO** (AI Overviews), **AGO** (agent/crawler access) — plus validator-grade **`llms.txt` / `llms-full.txt` / `ai.txt`** checking and AI-crawler robots policy.
 - **Sitemap discovery & crawl** — robots.txt hints + `/sitemap.xml`, nested `sitemapindex`, and a hybrid crawl (fast fetch with optional **headless** escalation for JS-rendered pages).
-- **Tracker / heatmap detection** — Microsoft Clarity (with project ID), GA4, GTM, Hotjar, FullStory, **Meta Pixel / Facebook SDK / domain-verification**, and ~20 more.
-- **AI-powered fixes** — rewrite titles/descriptions, generate OG/FAQ schema (Vercel AI Gateway).
-- **Site speed & performance** — Lighthouse scores, Core Web Vitals, and optimization tips via Google PageSpeed Insights.
-- **Save, share & history** — every scan is persisted to Postgres (Neon); each gets a shareable `/r/[token]` link that reopens the saved report without re-scanning, and `/history` lists recent scans.
-- **Search Console insights** — connect Google Search Console (per-visitor OAuth) at `/search-console` to see top queries & pages, clicks/impressions/CTR/position with period-over-period deltas, a trend chart, and striking-distance (position 5–20) opportunities.
-- **Exports** — CSV and JSON; shareable report data.
-- **Accounts & plans** — Google sign-in (`/login`) with a **Free / Pro** model. Free: 3 scans/day, 10 pages/scan, core audit. Pro: 100 scans/day, 40 pages, deep scan, Performance, Search Console, AI fixes, and saved history. **Razorpay** subscriptions at `/pricing` (UPI/cards) upgrade users to Pro automatically.
-- **Dashboard** — sidebar sections (AI Readiness · Overview · Pages · Issues · Performance · Tracking), orange theme, light/dark mode.
+- **Link intelligence** — outbound link quality, site-wide broken-link + redirect health, and an internal-link graph on deep scans.
+- **Tracker / heatmap detection** — Microsoft Clarity (with project ID), GA4, GTM, Hotjar, Meta Pixel, and ~20 more.
+- **AI-powered fixes** — rewrite titles/descriptions, generate OG/FAQ schema (Vercel AI Gateway or your own key).
+- **Site speed & performance** — Lighthouse scores, Core Web Vitals, and tips via Google PageSpeed Insights.
+- **Backlinks, live SERP rank & competitor discovery** — via DataForSEO (button-gated, paid; ≤24h snapshot reuse).
+- **Active site + dashboard** — pick a site once (the sidebar **site switcher**); it becomes the default everywhere. `/dashboard` is the home hub that reuses your latest audit to surface top fixes and route into each tool.
+- **AI content studio** — **Brand Memory** (reusable Markdown profiles), **Articles** and **Post Ideas** (platform-native social), with a draft→approve loop. **Bring your own AI key** at `/ai-settings` (OpenAI / Anthropic / Google), encrypted at rest.
+- **Save, share & history** — every audit is persisted to Postgres (Neon); each gets a shareable `/r/[token]` link that reopens the saved report without re-scanning; `/history` lists recent scans.
+- **Analytics + Search Console** — connect Google once (per-visitor OAuth) to see GA4 traffic and Search Console queries/pages/CTR/position with deltas, trends, and striking-distance opportunities, all on `/seo`.
+- **Accounts** — Google sign-in (`/login`); `/account` manages identity + Google connection. **Full access for everyone — no plan tiers, no billing.**
+- **Monitors** — scheduled re-scans with an email alert when a score drops.
+
+## Security
+
+OWASP-hardened: SSRF-guarded outbound fetch (literal-host **and** DNS resolve-and-validate), rate limiting on expensive routes, security headers (CSP, HSTS, X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy) in `next.config.mjs`, AES-256-GCM encryption for stored OAuth refresh tokens + BYO AI keys, parameterized SQL, and user-scoped queries.
 
 ## Tech stack
 
@@ -31,72 +39,76 @@ npm run dev      # http://localhost:3000
 
 Scripts: `npm run dev` · `npm run build` · `npm run start` · `npm run lint`.
 
-To enable persistence, set `DATABASE_URL` (and `DATABASE_URL_UNPOOLED`) and run the one-time migration:
+To enable persistence, set `DATABASE_URL` (+ `DATABASE_URL_UNPOOLED`) and run the migrations:
 
 ```bash
-node --env-file=.env.local scripts/migrate.mjs   # creates the scans table
+node --env-file=.env.local scripts/migrate.mjs               # base schema (scans, users, sessions, gsc_*, …)
+node --env-file=.env.local scripts/migrate-active-site.mjs   # brand_profiles.last_used_at + generated_content.status
+node --env-file=.env.local scripts/migrate-rate-limits.mjs   # rate_limits table
 ```
 
 ## Environment variables
 
-All are optional — the app degrades gracefully without them (no DB → scans just aren't saved; no token → no analytics).
+All optional — the app degrades gracefully (no DB → audits just aren't saved; no token → no analytics).
 
 | Variable | Enables | Notes |
 | --- | --- | --- |
-| `AI_GATEWAY_API_KEY` | AI fixes + llms.txt "Enhance with AI" | Local only; on Vercel this works automatically via OIDC. |
-| `PAGESPEED_API_KEY` | Performance section | Keyless PSI hits Google's shared daily quota (429); a free key is required in practice. |
-| `DATABASE_URL` | Save / share / history (Neon Postgres) | Pooled connection string; the serverless driver reads it at runtime. |
-| `DATABASE_URL_UNPOOLED` | DB migration | Direct connection used by `scripts/migrate.mjs` (not needed at runtime). |
-| `BROWSERBASE_API_KEY` + `BROWSERBASE_PROJECT_ID` | Headless rendering (prod) | Spins up a Browserbase session and connects over CDP. |
-| `BROWSER_WS_ENDPOINT` | Headless rendering (prod) | Alternative: any remote browser CDP endpoint (Browserless / Cloudflare). |
-| `CHROME_EXECUTABLE_PATH` | Headless rendering (local dev) | Path to a local Chrome/Chromium binary. |
-| `NEXT_PUBLIC_superengine_POSTHOG_PROJECT_TOKEN` | Product analytics (PostHog) | Client-side; pageviews + key events. No-ops when unset. |
-| `NEXT_PUBLIC_superengine_POSTHOG_HOST` | PostHog ingestion host | Defaults to `https://us.i.posthog.com`. |
-| `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` | Google sign-in (`/login`) **and** Search Console | One OAuth client (Web). Register **both** redirect URIs: `…/api/auth/callback` (login) and `…/api/gsc/callback` (Search Console). Login uses non-sensitive `openid email profile` scopes (no Google verification needed); GSC's `webmasters.readonly` is sensitive. Needs Neon. |
-| `AUTH_REDIRECT_URI` / `GSC_REDIRECT_URI` | Auth / GSC (optional) | Override the login / GSC redirect URI; otherwise derived from the request origin. |
-| `RAZORPAY_KEY_ID` + `RAZORPAY_KEY_SECRET` | Pro billing (`/pricing`) | Razorpay API keys (test or live). Without them, upgrade is disabled (Pro stays manual). |
-| `RAZORPAY_WEBHOOK_SECRET` | Billing webhook | Secret for `…/api/billing/webhook`; the plan only flips on signature-verified events. |
-| `RAZORPAY_PRO_PLAN_ID` (+ `_ANNUAL`) | Pro plan(s) | The Razorpay dashboard plan id(s) the subscription is created against. |
+| `AI_GATEWAY_API_KEY` | AI fixes + article/social generation (default model) | Local only; on Vercel it works via OIDC. |
+| `AI_KEY_SECRET` | BYO AI-key encryption | Falls back to `GOOGLE_CLIENT_SECRET`. If it changes, users re-enter their key. |
+| `PAGESPEED_API_KEY` | Performance / PageSpeed | Keyless hits Google's shared quota (429). **Must not** be HTTP-referrer-restricted for server use. |
+| `PAGESPEED_REFERER` | PageSpeed with a referrer-restricted key | Sent as the `Referer` header; defaults to the app origin. |
+| `DATABASE_URL` | Save / share / history (Neon) | Pooled connection string, read at runtime. |
+| `DATABASE_URL_UNPOOLED` | DB migrations | Direct connection used by the `scripts/migrate*.mjs` runners. |
+| `BROWSERBASE_API_KEY` + `BROWSERBASE_PROJECT_ID` | Headless rendering (prod) | Browserbase session over CDP. |
+| `BROWSER_WS_ENDPOINT` / `CHROME_EXECUTABLE_PATH` | Headless rendering | Remote CDP endpoint / local Chrome path. |
+| `NEXT_PUBLIC_superengine_POSTHOG_PROJECT_TOKEN` (+ `_HOST`) | Product analytics (PostHog) | Client-side; no-ops when unset. Host defaults to `https://us.i.posthog.com`. |
+| `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` | Google sign-in **and** Analytics + Search Console | One Web OAuth client. Register **both** redirect URIs: `…/api/auth/callback` and `…/api/gsc/callback`. GSC/GA scopes (`webmasters.readonly` + `analytics.readonly`) are sensitive → only test users until verified. |
+| `AUTH_REDIRECT_URI` / `GSC_REDIRECT_URI` | Override redirect URIs (optional) | Otherwise derived from the request origin. |
+| `DATAFORSEO_LOGIN` + `DATAFORSEO_PASSWORD` | Backlinks, live SERP, competitors | Without them those cards show "connect a provider". |
+| `RESEND_API_KEY` | Monitor alert emails | Used by the scheduled-monitor cron. |
+| `CRON_SECRET` | Monitor cron auth | Vercel Cron sends `Authorization: Bearer <CRON_SECRET>` to `…/api/cron/monitor`. |
 
 Add on Vercel with `vercel env add <NAME>`.
 
-> **Razorpay setup:** create a **Pro plan** in the Razorpay dashboard (Subscriptions → Plans; set the INR amount — keep `PRO_PRICING` in `src/lib/auth/plan.js` matching it), copy its `plan_id` into `RAZORPAY_PRO_PLAN_ID`. Add API keys + a **webhook** → `…/api/billing/webhook` subscribed to the `subscription.*` events, with the secret in `RAZORPAY_WEBHOOK_SECRET`. Pro can still be granted manually for comps: `UPDATE users SET plan='pro' WHERE email=…`.
-
-> **Search Console setup:** `webmasters.readonly` is a Google *sensitive* scope. Until the OAuth app passes Google's verification, only **test users** you add in the Google Cloud console can connect (they'll see an "unverified app" screen). Steps: Google Cloud → **APIs & Services** → enable **Google Search Console API** → **OAuth consent screen** (External; add yourself as a test user) → **Credentials → Create OAuth client ID → Web application** → Authorized redirect URIs: `http://localhost:3000/api/gsc/callback` and `https://superengine.vercel.app/api/gsc/callback` → copy the client ID + secret into env.
+> **Google setup:** enable the **Search Console API**, **Analytics Data API**, and **Analytics Admin API** in Google Cloud → OAuth consent screen (External; add test users) → Credentials → Web OAuth client → add both redirect URIs above.
 
 ## Project structure
 
 ```
 src/
   app/
-    page.js              Home (URL input + History / Search Console / Algorithm updates links)
-    layout.js            Root layout (next-themes + PostHog provider)
-    globals.css          Tailwind v4 + theme tokens (orange accent)
-    scan/                Dashboard: scan-dashboard, app-sidebar, *-panel.js, score-ring, og-preview, ai-fix
-    r/[token]/           Saved/shared report (read from Neon, no re-scan)
-    history/             Recent scans list
-    search-console/      Google Search Console insights (per-visitor OAuth)
-    google-updates/      Google algorithm-update timeline
-    login/               Google sign-in page
-    pricing/             Free vs Pro + Razorpay upgrade
-    api/                 export, report, ai-fix, pagespeed, auth/*, gsc/*, billing/*
+    page.js              Marketing landing ("instrument" design: command-bar audit form + AI Visibility Spectrum)
+    layout.js            Root layout (theme + PostHog + active-site providers)
+    seo/                 THE audit + Analytics/Search Console dashboard (7 tabs, URL entry)
+    dashboard/           Active-site home hub (agent cards from the latest audit)
+    account/             Identity + Google connect/disconnect + sign out
+    scan/                Reusable dashboard panels (no route) — consumed by /seo and /r/[token]
+    r/[token]/           Saved/shared report
+    history/             Recent scans
+    profiles/ articles/ post-ideas/ ai-settings/   AI content studio
+    competitors/ compare/ monitors/                Competitor + comparison + scheduled monitors
+    google-updates/ login/ privacy/ terms/
+    search-console/      307 → /seo
+    api/                 seo/{audit,funnel,backlinks,serp,competitors}, ai-fix, ai-settings,
+                         articles, post-ideas, profiles/*, content/[id], pagespeed, export,
+                         report, auth/*, gsc/*, ga/*, cron/monitor
   lib/
-    seo/                 analyze (orchestrator), sitemap, crawl, headless, extract, rules,
-                         ai-rules, ai-site, trackers, explanations, gamify, safe-fetch
-    ai/                  suggest-fixes (AI Gateway)
-    db.js, db/scans.js   Neon client + saveScan / getScanByToken / recentScans
-    auth/                Google login (google, session, plan) — Free/Pro gating
-    billing/             Razorpay subscriptions (razorpay, store)
-    gsc/                 Search Console OAuth (oauth, tokens, api)
-  components/
-    ui/                  shadcn/ui (Base UI) components
-    user-menu.js         Header auth control (avatar + plan + sign out)
-    posthog-provider.js  Client analytics provider (no-ops without a token)
-db/schema.sql            DB DDL (users, sessions, scans, gsc_*, performance_runs)
-scripts/migrate.mjs      One-time migration runner
+    seo/                 analyze (runScan orchestrator), sitemap, crawl, headless, extract, rules,
+                         ai-rules, ai-site, trackers, explanations, gamify, safe-fetch, readability,
+                         relevance, links-probe, keywords, backlinks, serp, dataforseo, competitors,
+                         markdown-report, google-updates
+    ai/                  suggest-fixes, generate-article, generate-social, models, user-model, crypto, errors
+    auth/                Google login (google, session, plan — full access for all)
+    gsc/ ga/             Search Console + Analytics OAuth & APIs (shared gsc_session)
+    db.js, db/           Neon client + scans/profiles/content/ai-settings/monitors/records
+    site/active.js       Active-site resolution
+    rate-limit.js        Neon fixed-window rate limiter
+    email.js             Resend email (monitor alerts)
+db/schema.sql            DB DDL (gitignored)
+scripts/                 migrate*.mjs (base + feature migrations), verify-*.mjs
 ```
 
-The scan pipeline lives in `src/lib/seo/analyze.js` (`runScan`), which produces a single `result` object consumed by every dashboard panel and export. After a scan, `saveScan(result)` persists it as JSONB and returns a share token.
+The audit pipeline lives in `src/lib/seo/analyze.js` (`runScan`), which produces a single `result` object consumed by every dashboard panel and export. After an audit, `saveScan(result, userId)` persists it as JSONB and returns a share token.
 
 ## Deploy
 
