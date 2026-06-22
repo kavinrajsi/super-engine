@@ -8,6 +8,7 @@ import { listContent, saveContent } from "@/lib/db/content";
 import { generateSocialPosts } from "@/lib/ai/generate-social";
 import { userModel } from "@/lib/ai/user-model";
 import { aiErrorMessage } from "@/lib/ai/errors";
+import { rateLimitResponse } from "@/lib/rate-limit";
 
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
@@ -43,6 +44,9 @@ export async function POST(request) {
   if (!platforms.length) {
     return Response.json({ error: "Select at least one platform." }, { status: 400 });
   }
+
+  const limited = await rateLimitResponse(request, "post-ideas", { limit: 20, windowSec: 600 }, userId);
+  if (limited) return limited;
 
   const profile = body?.profileId ? await getProfile(body.profileId, userId) : null;
 

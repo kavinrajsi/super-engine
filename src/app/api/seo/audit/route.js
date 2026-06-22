@@ -18,6 +18,7 @@ import { isAuthConfigured } from "@/lib/auth/google";
 import { planOf } from "@/lib/auth/plan";
 import { listProfiles, touchProfile, createProfile } from "@/lib/db/profiles";
 import { normalizeSiteUrl } from "@/lib/site/active";
+import { rateLimitResponse } from "@/lib/rate-limit";
 
 export const maxDuration = 60;
 
@@ -102,6 +103,10 @@ export async function GET(request) {
       const cached = await latestScanForUrl(cacheCandidates(safeUrl), userId, 60);
       if (cached) return Response.json({ result: cached, cached: true });
     }
+
+    // Rate-limit only actual scans (cache hits above are cheap).
+    const limited = await rateLimitResponse(request, "audit", { limit: 30, windowSec: 600 }, userId);
+    if (limited) return limited;
 
     const result = await runScan(safeUrl, { deepScan, maxPages });
     const shareToken = await saveScan(result, userId); // best-effort

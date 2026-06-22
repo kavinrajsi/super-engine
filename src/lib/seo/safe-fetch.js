@@ -5,6 +5,8 @@
 // This module centralizes URL validation + a hardened fetch wrapper so every
 // outbound request in the app goes through the same checks.
 
+import { lookup } from "node:dns/promises";
+
 const BLOCKED_HOSTNAMES = new Set([
   "localhost",
   "localhost.localdomain",
@@ -41,7 +43,22 @@ function isPrivateIPv6(host) {
   if (h === "::1" || h === "::") return true;
   if (h.startsWith("fc") || h.startsWith("fd")) return true; // unique local
   if (h.startsWith("fe80")) return true; // link-local
-  if (h.startsWith("::ffff:")) return isPrivateIPv4(h.split(":").pop()); // mapped v4
+  // IPv4-mapped (::ffff:…). The URL parser canonicalizes the dotted form
+  // (::ffff:127.0.0.1) to hex (::ffff:7f00:1), so handle BOTH: dotted tail goes
+  // straight to isPrivateIPv4; hex form rebuilds the dotted quad from the last
+  // two hextets. (A naive split(":").pop() returns "1" for the hex form and
+  // lets 127.0.0.1 through — that was the bypass.)
+  if (h.startsWith("::ffff:")) {
+    const tail = h.slice("::ffff:".length);
+    if (tail.includes(".")) return isPrivateIPv4(tail);
+    const hextets = h.split(":");
+    const hi = parseInt(hextets[hextets.length - 2] || "0", 16);
+    const lo = parseInt(hextets[hextets.length - 1] || "0", 16);
+    if (Number.isNaN(hi) || Number.isNaN(lo)) return true; // unparseable → unsafe
+    const n = ((hi << 16) | lo) >>> 0;
+    const dotted = [(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255].join(".");
+    return isPrivateIPv4(dotted);
+  }
   return false;
 }
 
@@ -79,6 +96,26 @@ export function assertSafeUrl(input) {
   return url;
 }
 
+// SSRF hardening beyond the literal-hostname check: resolve the hostname's A/AAAA
+// records and reject if ANY resolves to a private/reserved IP. This blocks the
+// "public name → 127.0.0.1 / 169.254.169.254" trick (e.g. localtest.me) that a
+// string check can't catch. Residual: a sub-ms TOCTOU window remains since Node
+// `fetch` re-resolves DNS at connect time (it can't be pinned to an IP cleanly);
+// this still defeats the practical attack. Throws a user-safe Error when unsafe.
+async function assertResolvedSafe(hostname) {
+  let records;
+  try {
+    records = await lookup(hostname, { all: true });
+  } catch {
+    return; // resolution failure surfaces later as a normal fetch error
+  }
+  for (const { address } of records) {
+    if (isPrivateIPv4(address) || isPrivateIPv6(address)) {
+      throw new Error("That host resolves to a private or reserved address.");
+    }
+  }
+}
+
 // Derive a coarse "is this response cacheable?" flag from Cache-Control.
 // Public/long-lived without no-store/no-cache/private counts as cacheable.
 function isCacheable(cacheControl) {
@@ -97,6 +134,7 @@ function isCacheable(cacheControl) {
 // and total only.
 export async function safeFetch(input, { timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
   const url = assertSafeUrl(input);
+  await assertResolvedSafe(url.hostname);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -111,7 +149,8 @@ export async function safeFetch(input, { timeoutMs = DEFAULT_TIMEOUT_MS } = {}) 
     });
 
     // Re-validate the final URL in case redirects pointed somewhere internal.
-    assertSafeUrl(res.url || url.toString());
+    const finalUrl = assertSafeUrl(res.url || url.toString());
+    await assertResolvedSafe(finalUrl.hostname);
 
     const reader = res.body?.getReader();
     let received = 0;
@@ -179,6 +218,7 @@ function toggleWww(url) {
 // refresh redirects are not followed.)
 export async function resolveUrl(input, { timeoutMs = 8_000 } = {}) {
   const probe = async (u) => {
+    await assertResolvedSafe(u.hostname);
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
@@ -188,7 +228,8 @@ export async function resolveUrl(input, { timeoutMs = 8_000 } = {}) {
         headers: { "User-Agent": USER_AGENT, Accept: "text/html,application/xhtml+xml,application/xml" },
       });
       // Re-validate the final URL in case redirects pointed somewhere internal.
-      assertSafeUrl(res.url || u.toString());
+      const finalUrl = assertSafeUrl(res.url || u.toString());
+      await assertResolvedSafe(finalUrl.hostname);
       // We only need the final URL + status, not the body.
       try {
         await res.body?.cancel();

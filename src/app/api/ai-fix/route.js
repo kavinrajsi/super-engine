@@ -3,6 +3,7 @@
 // model-generated, copy-paste-ready fixes.
 
 import { suggestFixes } from "@/lib/ai/suggest-fixes";
+import { rateLimitResponse } from "@/lib/rate-limit";
 
 export const maxDuration = 60;
 
@@ -18,6 +19,9 @@ export async function POST(request) {
   if (!url || typeof url !== "string") {
     return Response.json({ error: "Missing 'url'." }, { status: 400 });
   }
+
+  const limited = await rateLimitResponse(request, "ai-fix", { limit: 20, windowSec: 600 });
+  if (limited) return limited;
 
   try {
     const result = await suggestFixes({ url, signals, issues: issues || [] });

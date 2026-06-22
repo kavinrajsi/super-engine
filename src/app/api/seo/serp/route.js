@@ -7,6 +7,7 @@ import { assertSafeUrl } from "@/lib/seo/safe-fetch";
 import { fetchSerp, isSerpConfigured, serpProvider } from "@/lib/seo/serp";
 import { domainOf } from "@/lib/seo/backlinks";
 import { saveSerpSnapshot, latestSerpSnapshot } from "@/lib/db/records";
+import { rateLimitResponse } from "@/lib/rate-limit";
 
 export const maxDuration = 60;
 
@@ -34,6 +35,9 @@ export async function GET(request) {
   if (searchParams.get("check") === "1") {
     return Response.json({ configured: true, loaded: false });
   }
+
+  const limited = await rateLimitResponse(request, "serp", { limit: 10, windowSec: 3600 });
+  if (limited) return limited;
 
   const domain = domainOf(rawUrl);
   try {

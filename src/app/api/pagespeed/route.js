@@ -3,6 +3,7 @@
 
 import { assertSafeUrl } from "@/lib/seo/safe-fetch";
 import { savePerformanceRun } from "@/lib/db/records";
+import { rateLimitResponse } from "@/lib/rate-limit";
 
 export const maxDuration = 60;
 
@@ -29,6 +30,9 @@ export async function GET(request) {
   } catch (err) {
     return Response.json({ error: err.message }, { status: 400 });
   }
+
+  const limited = await rateLimitResponse(request, "pagespeed", { limit: 30, windowSec: 600 });
+  if (limited) return limited;
 
   const params = new URLSearchParams({ url: safe.toString(), strategy });
   for (const c of ["performance", "seo", "accessibility", "best-practices"]) params.append("category", c);
