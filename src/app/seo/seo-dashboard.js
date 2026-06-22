@@ -80,16 +80,19 @@ function ShareButton({ shareToken }) {
   );
 }
 
-export default function SeoDashboard({ email, connected = false }) {
+export default function SeoDashboard({ email, connected = false, initialUrl = "", initialDeep = false }) {
   const { activeSite } = useActiveSite();
   const activeUrl = useMemo(() => toUrl(activeSite?.website_url), [activeSite?.website_url]);
+  // A URL passed via ?url= (hero form / nav) takes precedence over the active site.
+  const initialTarget = useMemo(() => toUrl(initialUrl), [initialUrl]);
 
-  const [tab, setTab] = useState(connected ? "traffic" : "seo");
+  const [tab, setTab] = useState(initialUrl ? "seo" : connected ? "traffic" : "seo");
 
   // Audit-bar state: the URL field + deep toggle, and the URL actually audited.
-  const [urlInput, setUrlInput] = useState(activeSite?.website_url || "");
-  const [deep, setDeep] = useState(false);
-  const [target, setTarget] = useState(activeUrl);
+  const [urlInput, setUrlInput] = useState(initialUrl || activeSite?.website_url || "");
+  const [deep, setDeep] = useState(!!initialDeep);
+  const [target, setTarget] = useState(initialTarget || activeUrl);
+  const didInitial = useRef(false);
 
   // Resolved Google matches for the active site (for the Traffic tab).
   const [gscSites, setGscSites] = useState(null);
@@ -103,15 +106,17 @@ export default function SeoDashboard({ email, connected = false }) {
   const [shareToken, setShareToken] = useState(null);
   const auditedTarget = useRef(null);
 
-  // When the active site changes, reset the audit bar + target to it.
+  // When the active site changes, reset the audit bar + target to it — unless a
+  // URL was passed in via ?url=, which drives the audit instead.
   useEffect(() => {
+    if (initialUrl) return;
     setUrlInput(activeSite?.website_url || "");
     setTarget(activeUrl);
     setScan(null);
     setShareToken(null);
     setStatus("idle");
     auditedTarget.current = null;
-  }, [activeUrl, activeSite?.website_url]);
+  }, [activeUrl, activeSite?.website_url, initialUrl]);
 
   // Load GSC site + GA property lists once, to scope the Traffic tab.
   useEffect(() => {
@@ -159,7 +164,8 @@ export default function SeoDashboard({ email, connected = false }) {
     }
   }, []);
 
-  // Lazily run the cheap auto-audit when an audit tab opens for a new target.
+  // Lazily audit when an audit tab opens for a new target. A URL arriving via
+  // ?url= gets a full (optionally deep) scan once; otherwise a cheap single page.
   useEffect(() => {
     if (!AUDIT_TABS.has(tab)) return;
     if (status === "loading") return;
@@ -168,8 +174,10 @@ export default function SeoDashboard({ email, connected = false }) {
       return;
     }
     if (scan && auditedTarget.current === target) return;
-    runAudit(target, { full: false, force: false });
-  }, [tab, target, scan, status, runAudit]);
+    const full = !!initialTarget && initialTarget === target && !didInitial.current;
+    if (full) didInitial.current = true;
+    runAudit(target, { full, force: false, deepScan: full ? !!initialDeep : false });
+  }, [tab, target, scan, status, runAudit, initialTarget, initialDeep]);
 
   function onRun(e) {
     e?.preventDefault?.();

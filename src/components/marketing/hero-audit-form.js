@@ -20,7 +20,7 @@ export default function HeroAuditForm({ location = "hero" }) {
   return (
     <div className="w-full max-w-xl">
       <form
-        action="/scan"
+        action="/seo"
         method="get"
         onSubmit={() => ph?.capture("cta_clicked", { cta: "run_audit", location })}
         className="flex flex-col gap-3"

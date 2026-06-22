@@ -61,7 +61,7 @@ export async function GET(request) {
         text:
           `Your monitored site ${m.url} dropped from ${prev} to ${score} ` +
           `(SEO health). AI readiness is now ${aiOverall ?? "—"}.\n\n` +
-          `Re-run a full audit at ${new URL("/scan", request.url).origin}/scan?url=${encodeURIComponent(m.url)}`,
+          `Re-run a full audit at ${new URL("/seo", request.url).origin}/seo?url=${encodeURIComponent(m.url)}`,
       });
       if (ok) alerted += 1;
     }

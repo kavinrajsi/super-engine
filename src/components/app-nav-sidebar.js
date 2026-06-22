@@ -48,7 +48,7 @@ function buildGroups(scanHref) {
       label: "SEO & Search",
       links: [
         { href: "/seo", label: "SEO", icon: BarChart3 },
-        { href: scanHref, label: "Scan", icon: ScanSearch, match: "/scan" },
+        { href: scanHref, label: "Scan", icon: ScanSearch },
         { href: "/competitors", label: "Competitors", icon: Users },
         { href: "/compare", label: "Compare", icon: GitCompareArrows },
         { href: "/monitors", label: "Monitors", icon: Radar },
@@ -80,10 +80,10 @@ function buildGroups(scanHref) {
 export default function AppNavSidebar() {
   const pathname = usePathname();
   const { activeSite } = useActiveSite();
-  // Scan the active site when one is stored; otherwise send to the URL entry.
+  // Scan the active site via the /seo audit when one is stored; otherwise /seo.
   const scanHref = activeSite?.website_url
-    ? `/scan?url=${encodeURIComponent(activeSite.website_url)}`
-    : "/";
+    ? `/seo?url=${encodeURIComponent(activeSite.website_url)}`
+    : "/seo";
   const groups = buildGroups(scanHref);
 
   return (

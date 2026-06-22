@@ -83,7 +83,7 @@ export default async function DashboardPage() {
   const siteScore = result?.siteScore ?? null;
   const aiOverall = result?.aiReadiness?.overall ?? null;
   const topIssues = result ? groupIssuesWithPages(result.pages).slice(0, 5) : [];
-  const scanHref = `/scan?url=${encodeURIComponent(siteUrl || activeSite.name)}`;
+  const scanHref = `/seo?url=${encodeURIComponent(siteUrl || activeSite.name)}`;
 
   const agents = [
     {

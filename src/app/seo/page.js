@@ -35,14 +35,20 @@ const ERRORS = {
 
 export default async function SeoPage({ searchParams }) {
   const sp = await searchParams;
+  // A URL to audit can arrive from the hero form / nav (?url=&deep=).
+  const initialUrl = typeof sp?.url === "string" ? sp.url : "";
+  const initialDeep = sp?.deep === "1" || sp?.deep === "on";
+  const nextPath = `/seo${
+    initialUrl ? `?url=${encodeURIComponent(initialUrl)}${initialDeep ? "&deep=1" : ""}` : ""
+  }`;
 
-  // App-login + Pro gate (separate from the per-visitor Google connection).
+  // App-login gate (separate from the per-visitor Google connection).
   const appUser = isAuthConfigured() ? await currentUser() : null;
   if (isAuthConfigured() && !appUser) {
     return (
       <Shell>
         <h1 className="text-2xl font-bold">Sign in to use SEO insights</h1>
-        <Link href="/login?next=/seo" className={buttonVariants()}>
+        <Link href={`/login?next=${encodeURIComponent(nextPath)}`} className={buttonVariants()}>
           Sign in
         </Link>
       </Shell>
@@ -72,7 +78,12 @@ export default async function SeoPage({ searchParams }) {
           </p>
         )}
 
-        <SeoDashboard email={session?.email} connected={!!session} />
+        <SeoDashboard
+          email={session?.email}
+          connected={!!session}
+          initialUrl={initialUrl}
+          initialDeep={initialDeep}
+        />
       </div>
     </AppShell>
   );
