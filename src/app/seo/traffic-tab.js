@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import GaDashboard from "./ga-dashboard";
 import GscDashboard from "./gsc-dashboard";
+import CloudflareCard from "./cloudflare-card";
 
 const nf = new Intl.NumberFormat("en-US");
 const fmtInt = (n) => (n == null ? "—" : nf.format(Math.round(n)));
@@ -71,23 +72,6 @@ function FunnelCard({ funnel }) {
 export default function TrafficTab({ email, connected, domain, site, property, gscNoMatch, gaNoMatch }) {
   const [funnel, setFunnel] = useState(null);
 
-  // Traffic needs the per-visitor Google connection; the audit tabs don't.
-  if (!connected) {
-    return (
-      <Card>
-        <CardContent className="flex flex-col items-start gap-3 py-6">
-          <p className="text-sm text-muted-foreground">
-            Connect Google to see your Analytics traffic and Search Console queries, pages, and
-            ranking opportunities. The audit tabs work without it.
-          </p>
-          <a href="/api/gsc/auth" className={buttonVariants({ size: "lg" })}>
-            Connect Google
-          </a>
-        </CardContent>
-      </Card>
-    );
-  }
-
   // Scope the funnel to the active-site match. Skip the call entirely when
   // neither half matched — nothing to show.
   useEffect(() => {
@@ -106,17 +90,36 @@ export default function TrafficTab({ email, connected, domain, site, property, g
 
   return (
     <div className="space-y-8">
-      <FunnelCard funnel={funnel} />
+      {/* Cloudflare is its own (token) connection — show it regardless of Google. */}
+      <CloudflareCard domain={domain} />
 
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold">Search Console</h2>
-        <GscDashboard email={email} domain={domain} site={site} noMatch={gscNoMatch} />
-      </section>
+      {!connected ? (
+        <Card>
+          <CardContent className="flex flex-col items-start gap-3 py-6">
+            <p className="text-sm text-muted-foreground">
+              Connect Google to see your Analytics traffic and Search Console queries, pages, and
+              ranking opportunities. The audit tabs work without it.
+            </p>
+            <a href="/api/gsc/auth" className={buttonVariants({ size: "lg" })}>
+              Connect Google
+            </a>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <FunnelCard funnel={funnel} />
 
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold">Analytics</h2>
-        <GaDashboard email={email} domain={domain} property={property} noMatch={gaNoMatch} />
-      </section>
+          <section className="space-y-4">
+            <h2 className="text-lg font-semibold">Search Console</h2>
+            <GscDashboard email={email} domain={domain} site={site} noMatch={gscNoMatch} />
+          </section>
+
+          <section className="space-y-4">
+            <h2 className="text-lg font-semibold">Analytics</h2>
+            <GaDashboard email={email} domain={domain} property={property} noMatch={gaNoMatch} />
+          </section>
+        </>
+      )}
     </div>
   );
 }
