@@ -1,17 +1,17 @@
 "use server";
 
-// Mutations for the monitors page. Each enforces login + Pro + the plan's
-// monitor cap server-side before touching the DB.
+// Mutations for the monitors page. Each enforces login + the plan's monitor cap
+// server-side before touching the DB.
 
 import { revalidatePath } from "next/cache";
 import { assertSafeUrl } from "@/lib/seo/safe-fetch";
 import { currentUser } from "@/lib/auth/session";
-import { planOf, isPro } from "@/lib/auth/plan";
+import { planOf } from "@/lib/auth/plan";
 import { addMonitor, deleteMonitor, setMonitorEnabled, listMonitors } from "@/lib/db/monitors";
 
 export async function createMonitor(formData) {
   const user = await currentUser();
-  if (!user || !isPro(user)) return;
+  if (!user) return;
 
   const existing = await listMonitors(user.id);
   if (existing.length >= planOf(user).monitors) return; // cap reached

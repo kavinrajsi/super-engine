@@ -7,7 +7,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { currentUser } from "@/lib/auth/session";
 import { isAuthConfigured } from "@/lib/auth/google";
-import { PLANS } from "@/lib/auth/plan";
 
 export const metadata = { title: "Sign in — MadRank" };
 export const dynamic = "force-dynamic";
@@ -68,7 +67,7 @@ export default async function LoginPage({ searchParams }) {
               </a>
             )}
             <p className="text-center text-xs text-muted-foreground">
-              Free: {PLANS.free.scansPerDay} scans/day · Pro: higher limits, Performance, Search
+              Free, with everything unlocked — unlimited audits, deep scans, Performance, Search
               Console &amp; saved history.
             </p>
           </CardContent>

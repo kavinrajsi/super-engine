@@ -88,17 +88,16 @@ export default function TermsPage() {
 
       <Section title="6. Payments">
         <p>
-          Paid (Pro) plans are billed through Razorpay on a recurring basis until cancelled.
-          Cancellation takes effect at the end of the current billing cycle. Except where required by
-          law, payments are non-refundable.
+          MadRank is currently free to use — there are no paid plans. If paid plans are introduced in
+          the future, the applicable billing terms will be presented before you are charged.
         </p>
       </Section>
 
       <Section title="7. Third-party services">
         <p>
           The Service integrates third parties (e.g. Google, AI providers, DataForSEO, Vercel, Neon,
-          PostHog, Razorpay). We are not responsible for third-party services, and your use of them
-          may be subject to their own terms.
+          PostHog). We are not responsible for third-party services, and your use of them may be
+          subject to their own terms.
         </p>
       </Section>
 

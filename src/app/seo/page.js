@@ -11,7 +11,6 @@ import { isGscConfigured } from "@/lib/gsc/oauth";
 import { getSession } from "@/lib/gsc/tokens";
 import { currentUser } from "@/lib/auth/session";
 import { isAuthConfigured } from "@/lib/auth/google";
-import { isPro } from "@/lib/auth/plan";
 import SeoDashboard from "./seo-dashboard";
 
 export const metadata = { title: "SEO — Analytics & Search Console — MadRank" };
@@ -50,18 +49,6 @@ export default async function SeoPage({ searchParams }) {
       </Shell>
     );
   }
-  if (appUser && !isPro(appUser)) {
-    return (
-      <Shell>
-        <h1 className="text-2xl font-bold">Analytics &amp; Search Console are a Pro feature</h1>
-        <p className="text-muted-foreground">
-          Connecting Google Analytics and Search Console to see your traffic, queries, pages, and
-          ranking opportunities in one place is available on the Pro plan.
-        </p>
-      </Shell>
-    );
-  }
-
   const configured = isGscConfigured();
   const sessionId = (await cookies()).get("gsc_session")?.value;
   const session = configured && sessionId ? await getSession(sessionId) : null;

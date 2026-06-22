@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { currentUser } from "@/lib/auth/session";
 import { isAuthConfigured } from "@/lib/auth/google";
-import { isPro, planOf } from "@/lib/auth/plan";
+import { planOf } from "@/lib/auth/plan";
 import { listMonitors } from "@/lib/db/monitors";
 import { createMonitor, removeMonitor, toggleMonitor } from "./actions";
 
@@ -27,23 +27,10 @@ function Shell({ children }) {
 }
 
 export default async function MonitorsPage() {
-  // Pro gate (mirrors /search-console, /compare).
+  // Login required (mirrors /search-console, /compare).
   const user = isAuthConfigured() ? await currentUser() : null;
   if (isAuthConfigured() && !user) {
     redirect(`/login?next=${encodeURIComponent("/monitors")}`);
-  }
-  if (isAuthConfigured() && user && !isPro(user)) {
-    return (
-      <Shell>
-        <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
-          <h1 className="text-2xl font-bold">Monitoring is a Pro feature</h1>
-          <p className="text-muted-foreground">
-            Re-scanning your sites on a schedule and getting alerted when scores drop is available
-            on the Pro plan.
-          </p>
-        </div>
-      </Shell>
-    );
   }
 
   const monitors = user ? await listMonitors(user.id) : [];

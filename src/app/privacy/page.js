@@ -120,7 +120,7 @@ export default function PrivacyPage() {
           <li>AI providers you choose (OpenAI, Anthropic, Google) and/or the Vercel AI Gateway</li>
           <li>Vercel (hosting), Neon (database)</li>
           <li>DataForSEO and Browserbase (audit data / headless rendering, where applicable)</li>
-          <li>PostHog (product analytics), Razorpay (payments for Pro plans)</li>
+          <li>PostHog (product analytics)</li>
         </ul>
       </Section>
 

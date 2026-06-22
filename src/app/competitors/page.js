@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 import AppShell from "@/components/app-shell";
 import { currentUser } from "@/lib/auth/session";
 import { isAuthConfigured } from "@/lib/auth/google";
-import { isPro } from "@/lib/auth/plan";
 import CompetitorsClient from "./competitors-client";
 
 export const metadata = { title: "Find competitors — MadRank" };
@@ -20,23 +19,10 @@ function Shell({ children }) {
 }
 
 export default async function CompetitorsPage() {
-  // Pro gate (mirrors /compare).
+  // Login required (mirrors /compare).
   const user = isAuthConfigured() ? await currentUser() : null;
   if (isAuthConfigured() && !user) {
     redirect(`/login?next=${encodeURIComponent("/competitors")}`);
-  }
-  if (user && !isPro(user)) {
-    return (
-      <Shell>
-        <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
-          <h1 className="text-2xl font-bold">Competitor discovery is a Pro feature</h1>
-          <p className="text-muted-foreground">
-            Auto-discovering who competes with your site and benchmarking against them is available
-            on the Pro plan.
-          </p>
-        </div>
-      </Shell>
-    );
   }
 
   return (

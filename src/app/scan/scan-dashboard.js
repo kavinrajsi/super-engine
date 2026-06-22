@@ -43,19 +43,7 @@ function ShareButton({ shareToken }) {
   );
 }
 
-function ProUpsell({ feature }) {
-  return (
-    <div className="mx-auto max-w-md rounded-lg border bg-card p-6 text-center">
-      <div className="text-2xl">🔒</div>
-      <h3 className="mt-2 text-lg font-semibold">{feature} is a Pro feature</h3>
-      <p className="mt-1 text-sm text-muted-foreground">
-        {feature}, deep scans, Search Console, and saved history are available on the Pro plan.
-      </p>
-    </div>
-  );
-}
-
-export default function ScanDashboard({ result, exportHref, reportHref, shareToken, pro = true }) {
+export default function ScanDashboard({ result, exportHref, reportHref, shareToken }) {
   const [active, setActive] = useState("ai");
   const ph = usePostHog();
 
@@ -76,7 +64,7 @@ export default function ScanDashboard({ result, exportHref, reportHref, shareTok
 
   return (
     <SidebarProvider>
-      <AppSidebar active={active} onSelect={setActive} issueCount={issueCount} pro={pro} />
+      <AppSidebar active={active} onSelect={setActive} issueCount={issueCount} />
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur">
           <SidebarTrigger />
@@ -125,11 +113,10 @@ export default function ScanDashboard({ result, exportHref, reportHref, shareTok
             </p>
           )}
           {active === "overview" && <OverviewPanel result={result} onSelect={setActive} />}
-          {active === "pages" && <PagesPanel result={result} pro={pro} />}
+          {active === "pages" && <PagesPanel result={result} />}
           {active === "issues" && <IssuesPanel result={result} />}
           {active === "ai" && <AiReadinessPanel readiness={result.aiReadiness} />}
-          {active === "performance" &&
-            (pro ? <PerformancePanel url={result.rootUrl} /> : <ProUpsell feature="Performance" />)}
+          {active === "performance" && <PerformancePanel url={result.rootUrl} />}
           {active === "tracking" && <TrackingPanel analytics={result.analytics} />}
         </main>
         <SiteFooter />

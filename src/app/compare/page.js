@@ -12,7 +12,6 @@ import { assertSafeUrl } from "@/lib/seo/safe-fetch";
 import { runScan } from "@/lib/seo/analyze";
 import { currentUser } from "@/lib/auth/session";
 import { isAuthConfigured } from "@/lib/auth/google";
-import { isPro } from "@/lib/auth/plan";
 
 export const metadata = { title: "Compare sites — MadRank" };
 export const dynamic = "force-dynamic";
@@ -101,23 +100,10 @@ async function scanOne(rawUrl) {
 export default async function ComparePage({ searchParams }) {
   const sp = await searchParams;
 
-  // Pro gate (mirrors /search-console).
+  // Login required (mirrors /search-console).
   const user = isAuthConfigured() ? await currentUser() : null;
   if (isAuthConfigured() && !user) {
     redirect(`/login?next=${encodeURIComponent("/compare")}`);
-  }
-  if (user && !isPro(user)) {
-    return (
-      <Shell>
-        <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
-          <h1 className="text-2xl font-bold">Competitor benchmarking is a Pro feature</h1>
-          <p className="text-muted-foreground">
-            Comparing your site against competitors on SEO and AI-search readiness is available on
-            the Pro plan.
-          </p>
-        </div>
-      </Shell>
-    );
   }
 
   const urls = [...new Set((Array.isArray(sp?.url) ? sp.url : sp?.url ? [sp.url] : [])

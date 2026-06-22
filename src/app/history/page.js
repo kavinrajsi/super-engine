@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { currentUser } from "@/lib/auth/session";
 import { isAuthConfigured } from "@/lib/auth/google";
-import { isPro } from "@/lib/auth/plan";
 
 export const metadata = { title: "Scan history — MadRank" };
 export const dynamic = "force-dynamic";
@@ -44,16 +43,6 @@ export default async function HistoryPage() {
       </Gate>
     );
   }
-  if (user && !isPro(user)) {
-    return (
-      <Gate title="History is a Pro feature">
-        <p className="text-muted-foreground">
-          Keeping and revisiting your saved scan history is available on the Pro plan.
-        </p>
-      </Gate>
-    );
-  }
-
   const scans = await recentScans(user?.id, 50);
 
   return (
