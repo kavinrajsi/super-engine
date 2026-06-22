@@ -65,6 +65,24 @@ export async function listContent(userId = null, { kind = null, limit = 30 } = {
   }
 }
 
+// Today's generated idea rows joined to their owner's email — drives the daily
+// email digest. Each row's data.ideas holds the idea objects.
+export async function todaysIdeaRows() {
+  if (!sql) return [];
+  try {
+    return await sql`
+      SELECT g.user_id, u.email, g.topic, g.data
+      FROM generated_content g
+      JOIN users u ON u.id = g.user_id
+      WHERE g.kind = 'idea'
+        AND g.created_at >= date_trunc('day', now())
+        AND u.email IS NOT NULL
+      ORDER BY g.user_id`;
+  } catch {
+    return [];
+  }
+}
+
 export async function getContent(id, userId = null) {
   if (!sql || !id) return null;
   try {

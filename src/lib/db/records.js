@@ -118,6 +118,34 @@ export async function latestSerpSnapshot(domain, maxAgeMins = 1440) {
   }
 }
 
+// All SERP snapshots for a domain in the window (oldest→newest) — the rank
+// time series for charting movement over time.
+export async function serpHistory(domain, days = 30) {
+  if (!sql || !domain) return [];
+  try {
+    return await sql`
+      SELECT created_at, data FROM serp_snapshots
+      WHERE domain = ${domain} AND created_at > now() - make_interval(days => ${days})
+      ORDER BY created_at ASC`;
+  } catch {
+    return [];
+  }
+}
+
+// Distinct domains that have a recent SERP snapshot — i.e. sites the user opted
+// into live-rank tracking by loading it at least once. Drives the rank cron.
+export async function domainsWithSerpSnapshots(days = 7) {
+  if (!sql) return [];
+  try {
+    const rows = await sql`
+      SELECT DISTINCT domain FROM serp_snapshots
+      WHERE created_at > now() - make_interval(days => ${days})`;
+    return rows.map((r) => r.domain).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
 export async function saveCompetitorSnapshot({ domain, data }) {
   if (!sql || !domain || !data) return;
   try {

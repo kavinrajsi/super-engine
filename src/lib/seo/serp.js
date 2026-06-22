@@ -6,9 +6,13 @@
 // no-ops to { configured:false } until creds are set, so the UI shows a "connect
 // a provider" card rather than failing.
 
-import { safeFetch } from "./safe-fetch";
-import { domainOf } from "./backlinks";
+import { domainOf, dfsPost } from "./dataforseo";
 import { candidateKeywords } from "./keywords";
+
+// DataForSEO Google organic SERP defaults (US / English).
+const SERP_LOCATION_CODE = 2840;
+const SERP_LANGUAGE_CODE = "en";
+const SERP_DEPTH = 50;
 
 // Re-exported so existing importers can keep pulling it from here.
 export { candidateKeywords };
@@ -23,17 +27,35 @@ export function isSerpConfigured() {
   return !!serpProvider();
 }
 
-// --- DataForSEO reference impl (inactive until creds exist) ---------------
+// --- DataForSEO live SERP ------------------------------------------------
+// Is this organic item our domain? (exact host or a subdomain of it.)
+function itemMatchesDomain(itemDomain, domain) {
+  const d = (itemDomain || "").replace(/^www\./, "").toLowerCase();
+  return d === domain || d.endsWith(`.${domain}`);
+}
+
+// One organic SERP lookup per keyword; find where `domain` ranks (top SERP_DEPTH).
 async function fetchDataForSeo(domain, keywords) {
-  const auth = Buffer.from(
-    `${process.env.DATAFORSEO_LOGIN}:${process.env.DATAFORSEO_PASSWORD}`
-  ).toString("base64");
-  // Real call: POST /v3/serp/google/organic/live/advanced with a task per
-  // keyword, then find the first organic item whose domain matches. Left as a
-  // wiring point; return "not found" rows for now.
-  void auth;
-  void safeFetch;
-  return keywords.map((keyword) => ({ keyword, position: null, url: null, found: false }));
+  return Promise.all(
+    keywords.map(async (keyword) => {
+      try {
+        const result = await dfsPost("/serp/google/organic/live/advanced", {
+          keyword,
+          location_code: SERP_LOCATION_CODE,
+          language_code: SERP_LANGUAGE_CODE,
+          depth: SERP_DEPTH,
+        });
+        const hit = (result?.items || []).find(
+          (it) => it.type === "organic" && itemMatchesDomain(it.domain, domain)
+        );
+        return hit
+          ? { keyword, position: hit.rank_group ?? hit.rank_absolute ?? null, url: hit.url || null, found: true }
+          : { keyword, position: null, url: null, found: false };
+      } catch {
+        return { keyword, position: null, url: null, found: false };
+      }
+    })
+  );
 }
 
 // Look up live organic rank for each keyword. Returns { configured, provider,
@@ -54,4 +76,27 @@ export async function fetchSerp(input, keywords = []) {
   } catch (e) {
     return { configured: true, provider, domain, error: e.message };
   }
+}
+
+// Pivot stored serp_snapshot rows ([{ created_at, data:{results} }], oldest→newest)
+// into per-keyword position series for charting rank movement over time.
+// Returns { keywords: [{ keyword, points: [{ date, position }] }], dates: [...] }.
+export function pivotSerpHistory(rows) {
+  const series = new Map(); // keyword -> [{date, position}]
+  const dates = [];
+  for (const row of rows || []) {
+    const date = (row.created_at instanceof Date ? row.created_at : new Date(row.created_at))
+      .toISOString()
+      .slice(0, 10);
+    if (!dates.includes(date)) dates.push(date);
+    for (const r of row.data?.results || []) {
+      if (!r.keyword) continue;
+      if (!series.has(r.keyword)) series.set(r.keyword, []);
+      series.get(r.keyword).push({ date, position: r.position ?? null });
+    }
+  }
+  return {
+    dates,
+    keywords: [...series.entries()].map(([keyword, points]) => ({ keyword, points })),
+  };
 }

@@ -59,6 +59,68 @@ function ConnectCard({ title, what }) {
   );
 }
 
+// Tiny inline sparkline of position-over-time (inverted: better rank = higher).
+function Sparkline({ points, width = 120, height = 24 }) {
+  const vals = points.map((p) => p.position).filter((v) => v != null);
+  if (vals.length < 2) return null;
+  const min = Math.min(...vals);
+  const max = Math.max(...vals);
+  const range = max - min || 1;
+  const n = points.length;
+  const coords = points
+    .map((p, i) => ({
+      x: n > 1 ? (i / (n - 1)) * width : 0,
+      y: p.position == null ? null : ((p.position - min) / range) * (height - 4) + 2,
+    }))
+    .filter((c) => c.y != null);
+  const d = coords.map((c, i) => `${i ? "L" : "M"}${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(" ");
+  return (
+    <svg width={width} height={height} aria-hidden="true">
+      <path d={d} fill="none" stroke="var(--primary)" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
+// Rank-over-time, read from stored SERP snapshots. Renders nothing until at
+// least one keyword has 2+ data points (i.e. the rank cron has run a few days).
+function RankHistory({ url }) {
+  const [history, setHistory] = useState(null);
+  useEffect(() => {
+    if (!url) return;
+    fetch(`/api/seo/serp-history?url=${encodeURIComponent(url)}`)
+      .then((r) => r.json())
+      .then((j) => setHistory(j.history || null))
+      .catch(() => {});
+  }, [url]);
+
+  const rows = (history?.keywords || []).filter(
+    (k) => k.points.filter((p) => p.position != null).length >= 2
+  );
+  if (!rows.length) return null;
+
+  return (
+    <div className="mt-4 space-y-2 border-t pt-3">
+      <div className="text-xs font-medium text-muted-foreground">Rank over time</div>
+      {rows.slice(0, 6).map((k) => {
+        const pts = k.points.filter((p) => p.position != null);
+        const latest = pts[pts.length - 1]?.position;
+        const delta = pts[0]?.position != null && latest != null ? pts[0].position - latest : 0;
+        return (
+          <div key={k.keyword} className="flex items-center gap-3 text-sm">
+            <span className="w-32 truncate" title={k.keyword}>{k.keyword}</span>
+            <Sparkline points={k.points} />
+            <span className="ml-auto tabular-nums">
+              #{latest}{" "}
+              {delta > 0 && <span className="text-pass">▲{delta}</span>}
+              {delta < 0 && <span className="text-error">▼{-delta}</span>}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function SnapshotCards({ result, onSelect }) {
   const [perf, setPerf] = useState({ status: "idle", score: null, error: null });
   const [backlinks, setBacklinks] = useState({ status: "idle", data: null });
@@ -271,6 +333,7 @@ export default function SnapshotCards({ result, onSelect }) {
                     </TableBody>
                   </Table>
                 )}
+                <RankHistory url={url} />
               </CardContent>
             </Card>
           ) : (
