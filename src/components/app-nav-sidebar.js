@@ -18,6 +18,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import {
+  ScanSearch,
   Users,
   GitCompareArrows,
   Radar,
@@ -32,6 +33,7 @@ import {
 import ThemeToggle from "@/components/theme-toggle";
 
 const LINKS = [
+  { href: "/", label: "Scan", icon: ScanSearch },
   { href: "/competitors", label: "Competitors", icon: Users },
   { href: "/compare", label: "Compare", icon: GitCompareArrows },
   { href: "/monitors", label: "Monitors", icon: Radar },
