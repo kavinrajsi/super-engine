@@ -4,6 +4,7 @@
 // generate platform-native posts, copy each, and browse saved sets.
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { usePostHog } from "posthog-js/react";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -60,9 +61,10 @@ function PostCard({ post }) {
 export default function PostIdeasClient() {
   const ph = usePostHog();
   const { activeSite } = useActiveSite();
+  const searchParams = useSearchParams();
   const [profiles, setProfiles] = useState([]);
   const [profileId, setProfileId] = useState("");
-  const [topic, setTopic] = useState("");
+  const [topic, setTopic] = useState(searchParams.get("topic") || "");
   const [selected, setSelected] = useState(["instagram", "x"]);
   const [state, setState] = useState("idle"); // idle | loading | done | error
   const [error, setError] = useState(null);

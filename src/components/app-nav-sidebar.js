@@ -29,6 +29,7 @@ import {
   BookText,
   FileText,
   Lightbulb,
+  Newspaper,
   Settings2,
   CircleUser,
 } from "lucide-react";
@@ -59,6 +60,7 @@ function buildGroups(scanHref) {
       label: "Content",
       links: [
         { href: "/profiles", label: "Brand Memory", icon: BookText },
+        { href: "/ideas", label: "Ideas", icon: Newspaper },
         { href: "/articles", label: "Articles", icon: FileText },
         { href: "/post-ideas", label: "Post Ideas", icon: Lightbulb },
       ],

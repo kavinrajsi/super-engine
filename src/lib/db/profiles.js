@@ -59,6 +59,29 @@ export async function touchProfile(id, userId = null) {
   }
 }
 
+// Sites (of signed-in users) that have NOT had ideas generated yet today —
+// drives the daily Ideas cron. Idempotent: re-running the same day returns
+// nothing new. Only profiles with a website_url + a real user are eligible.
+export async function dueIdeaSites(limit = 10) {
+  if (!sql) return [];
+  try {
+    return await sql`
+      SELECT p.id, p.user_id, p.name, p.website_url, p.markdown
+      FROM brand_profiles p
+      JOIN users u ON u.id = p.user_id
+      WHERE p.website_url IS NOT NULL AND p.website_url <> ''
+        AND NOT EXISTS (
+          SELECT 1 FROM generated_content g
+          WHERE g.profile_id = p.id AND g.kind = 'idea'
+            AND g.created_at >= date_trunc('day', now())
+        )
+      ORDER BY p.last_used_at DESC NULLS LAST
+      LIMIT ${limit}`;
+  } catch {
+    return [];
+  }
+}
+
 export async function getProfile(id, userId = null) {
   if (!sql || !id) return null;
   try {
