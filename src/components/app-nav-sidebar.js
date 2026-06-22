@@ -30,6 +30,7 @@ import {
   FileText,
   Lightbulb,
   Settings2,
+  CircleUser,
 } from "lucide-react";
 import ThemeToggle from "@/components/theme-toggle";
 import SiteSwitcher from "@/components/site-switcher";
@@ -68,7 +69,10 @@ function buildGroups(scanHref) {
     },
     {
       label: "Settings",
-      links: [{ href: "/ai-settings", label: "AI Settings", icon: Settings2 }],
+      links: [
+        { href: "/ai-settings", label: "AI Settings", icon: Settings2 },
+        { href: "/account", label: "Account", icon: CircleUser },
+      ],
     },
   ];
 }
