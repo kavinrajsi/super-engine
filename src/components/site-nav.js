@@ -16,6 +16,10 @@ const LINKS = [
   { href: "/history", label: "History" },
   { href: "/seo", label: "SEO" },
   { href: "/google-updates", label: "Algorithm updates" },
+  { href: "/profiles", label: "Brand Memory" },
+  { href: "/articles", label: "Articles" },
+  { href: "/post-ideas", label: "Post Ideas" },
+  { href: "/ai-settings", label: "AI Settings" },
   { href: "/pricing", label: "Pricing" },
 ];
 
