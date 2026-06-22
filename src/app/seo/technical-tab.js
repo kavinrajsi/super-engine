@@ -69,23 +69,85 @@ function CoverageRow({ label, value }) {
   );
 }
 
-function HeadingBars({ byLevel }) {
-  const levels = ["h1", "h2", "h3", "h4", "h5", "h6"];
-  const max = Math.max(1, ...levels.map((l) => byLevel?.[l] || 0));
+const CHIP_TONE = {
+  pass: "border-pass/30 bg-pass/10 text-pass",
+  warning: "border-warning/30 bg-warning/10 text-warning",
+  error: "border-error/30 bg-error/10 text-error",
+  muted: "border-border bg-muted text-muted-foreground",
+};
+
+function HeadingChip({ tone = "muted", children }) {
   return (
-    <div className="space-y-2">
-      {levels.map((l) => {
-        const n = byLevel?.[l] || 0;
-        return (
-          <div key={l} className="flex items-center gap-3 text-sm">
-            <span className="w-8 uppercase text-muted-foreground">{l}</span>
-            <div className="h-2 flex-1 rounded-full bg-muted">
-              <div className="h-full rounded-full bg-info" style={{ width: `${(n / max) * 100}%` }} />
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${CHIP_TONE[tone]}`}
+    >
+      {children}
+    </span>
+  );
+}
+
+function HeadingStructure({ headings, h1s }) {
+  const byLevel = headings?.byLevel || {};
+  const levels = ["h1", "h2", "h3", "h4", "h5", "h6"];
+  const counts = levels.map((l) => byLevel[l] || 0);
+  const total = headings?.count ?? counts.reduce((a, b) => a + b, 0);
+  const max = Math.max(1, ...counts);
+  const h1Count = byLevel.h1 || 0;
+  const skips = headings?.skips || 0;
+
+  const h1Tone = h1Count === 1 ? "pass" : h1Count === 0 ? "error" : "warning";
+  const h1Label = h1Count === 1 ? "Single H1" : h1Count === 0 ? "No H1" : `${h1Count} H1s`;
+  const skipTone = skips === 0 ? "pass" : "warning";
+  const skipLabel = skips === 0 ? "Clean hierarchy" : `${skips} level skip${skips > 1 ? "s" : ""}`;
+
+  return (
+    <div className="space-y-4">
+      {/* health summary */}
+      <div className="flex flex-wrap gap-2">
+        <HeadingChip tone={h1Tone}>{h1Label}</HeadingChip>
+        <HeadingChip tone={skipTone}>{skipLabel}</HeadingChip>
+        <HeadingChip tone="muted">{total} heading{total === 1 ? "" : "s"}</HeadingChip>
+      </div>
+
+      {/* per-level distribution */}
+      <div className="space-y-1.5">
+        {levels.map((l, i) => {
+          const n = counts[i];
+          return (
+            <div key={l} className="flex items-center gap-3">
+              <span className="w-7 font-mono text-xs uppercase text-muted-foreground">{l}</span>
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${(n / max) * 100}%`,
+                    backgroundColor: l === "h1" ? "var(--primary)" : "var(--info)",
+                  }}
+                />
+              </div>
+              <span className="w-6 text-right font-mono text-xs tabular-nums">{n}</span>
             </div>
-            <span className="w-6 text-right tabular-nums">{n}</span>
+          );
+        })}
+      </div>
+
+      {/* the actual H1 text — the page's primary topic signal */}
+      {h1s?.length > 0 ? (
+        <div className="rounded-lg border bg-muted/30 p-3">
+          <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            H1 text
           </div>
-        );
-      })}
+          <ul className="mt-1.5 space-y-1">
+            {h1s.slice(0, 4).map((t, i) => (
+              <li key={i} className="truncate text-sm" title={t}>
+                {t}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <p className="text-sm text-warning">No H1 found — add a single, descriptive H1.</p>
+      )}
     </div>
   );
 }
@@ -168,7 +230,7 @@ export default function TechnicalTab() {
             <CardTitle className="text-base">Heading structure</CardTitle>
           </CardHeader>
           <CardContent>
-            <HeadingBars byLevel={s?.headings?.byLevel} />
+            <HeadingStructure headings={s?.headings} h1s={s?.h1s} />
           </CardContent>
         </Card>
 

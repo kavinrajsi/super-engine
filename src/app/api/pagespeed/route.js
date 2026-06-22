@@ -34,16 +34,30 @@ export async function GET(request) {
   for (const c of ["performance", "seo", "accessibility", "best-practices"]) params.append("category", c);
   if (process.env.PAGESPEED_API_KEY) params.set("key", process.env.PAGESPEED_API_KEY);
 
+  // A server-side fetch sends no Referer, so a referrer-restricted key gets a
+  // "Requests from referer <empty> are blocked" 403. Send an allowed referer
+  // (env override, else this app's own origin) so a domain-restricted key works.
+  const referer = process.env.PAGESPEED_REFERER || new URL(request.url).origin;
+
   let data;
   try {
-    const res = await fetch(`${PSI}?${params}`, { signal: AbortSignal.timeout(55_000) });
+    const res = await fetch(`${PSI}?${params}`, {
+      headers: { Referer: referer },
+      signal: AbortSignal.timeout(55_000),
+    });
     data = await res.json();
     if (!res.ok) {
       const raw = data?.error?.message || "";
-      const msg =
-        res.status === 429 || /quota/i.test(raw)
-          ? "PageSpeed's keyless daily quota is exhausted. Add a free PAGESPEED_API_KEY (Google Cloud → enable PageSpeed Insights API → create API key) to enable performance tests."
-          : raw || `PageSpeed API error (${res.status})`;
+      let msg;
+      if (res.status === 429 || /quota/i.test(raw)) {
+        msg =
+          "PageSpeed's keyless daily quota is exhausted. Add a free PAGESPEED_API_KEY (Google Cloud → enable PageSpeed Insights API → create API key) to enable performance tests.";
+      } else if (res.status === 403 || /referer|referrer|blocked|API_KEY_HTTP_REFERRER_BLOCKED/i.test(raw)) {
+        msg =
+          "Your PAGESPEED_API_KEY is referrer-restricted. Set PAGESPEED_REFERER to an allowed domain, or change the key's restriction to 'None' or 'IP addresses' in Google Cloud → Credentials.";
+      } else {
+        msg = raw || `PageSpeed API error (${res.status})`;
+      }
       // 200 with an error body — client-handled, keeps the browser console clean.
       return Response.json({ error: msg });
     }

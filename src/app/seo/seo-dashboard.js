@@ -4,14 +4,11 @@
 // the active site) sits alongside a full on-demand site audit — SEO / Pages /
 // Issues / Technical / GEO / Tracking — that mirrors the standalone /scan. The
 // audit works on ANY URL (typed in the audit bar or the active site), with or
-// without Google connected, and supports deep multi-page scans + export/share.
+// without Google connected, and supports deep multi-page scans.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
-import { usePostHog } from "posthog-js/react";
-import { Check, Share2 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -59,27 +56,6 @@ function matchGscSite(sites, domain) {
   return matches.find((s) => s.startsWith("sc-domain:")) || matches[0] || null;
 }
 
-function ShareButton({ shareToken }) {
-  const ph = usePostHog();
-  const [copied, setCopied] = useState(false);
-  if (!shareToken) return null;
-  return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={() => {
-        navigator.clipboard?.writeText(`${window.location.origin}/r/${shareToken}`);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
-        ph?.capture("share_created", { token: shareToken });
-      }}
-    >
-      {copied ? <Check /> : <Share2 />}
-      {copied ? "Link copied" : "Share"}
-    </Button>
-  );
-}
-
 export default function SeoDashboard({ email, connected = false, initialUrl = "", initialDeep = false }) {
   const { activeSite } = useActiveSite();
   const activeUrl = useMemo(() => toUrl(activeSite?.website_url), [activeSite?.website_url]);
@@ -103,7 +79,6 @@ export default function SeoDashboard({ email, connected = false, initialUrl = ""
   const [status, setStatus] = useState("idle"); // idle|loading|done|error|empty|unsupported
   const [error, setError] = useState(null);
   const [cached, setCached] = useState(false);
-  const [shareToken, setShareToken] = useState(null);
   const auditedTarget = useRef(null);
 
   // When the active site changes, reset the audit bar + target to it — unless a
@@ -113,7 +88,6 @@ export default function SeoDashboard({ email, connected = false, initialUrl = ""
     setUrlInput(activeSite?.website_url || "");
     setTarget(activeUrl);
     setScan(null);
-    setShareToken(null);
     setStatus("idle");
     auditedTarget.current = null;
   }, [activeUrl, activeSite?.website_url, initialUrl]);
@@ -155,7 +129,6 @@ export default function SeoDashboard({ email, connected = false, initialUrl = ""
       }
       setScan(j.result);
       setCached(!!j.cached);
-      setShareToken(j.shareToken || null);
       setStatus("done");
       auditedTarget.current = t;
     } catch (e) {
@@ -199,7 +172,6 @@ export default function SeoDashboard({ email, connected = false, initialUrl = ""
   const ctx = { scan, status, error, cached, rescan };
 
   const showAuditTools = AUDIT_TABS.has(tab);
-  const q = target ? `url=${encodeURIComponent(target)}${deep ? "&deep=1" : ""}` : null;
 
   return (
     <Tabs value={tab} onValueChange={setTab} className="w-full">
@@ -213,37 +185,28 @@ export default function SeoDashboard({ email, connected = false, initialUrl = ""
         <TabsTrigger value="tracking">Tracking</TabsTrigger>
       </TabsList>
 
-      {/* Audit bar — type any URL, optionally deep-scan, run, export, share. */}
+      {/* Audit bar — type any URL, optionally deep-scan, and run. */}
       {showAuditTools && (
-        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border bg-card p-3">
-          <form onSubmit={onRun} className="flex flex-1 flex-wrap items-center gap-2">
-            <Input
-              value={urlInput}
-              onChange={(e) => setUrlInput(e.target.value)}
-              placeholder="yourdomain.com"
-              aria-label="Site URL to audit"
-              inputMode="url"
-              className="h-9 min-w-[12rem] flex-1 font-mono text-sm"
-            />
-            <Label className="flex cursor-pointer items-center gap-2 text-sm font-normal text-muted-foreground">
-              <Checkbox checked={deep} onCheckedChange={(v) => setDeep(!!v)} />
-              Deep scan
-            </Label>
-            <Button type="submit" size="sm" disabled={status === "loading"}>
-              {status === "loading" ? "Auditing…" : "Run audit"}
-            </Button>
-          </form>
-
-          {status === "done" && q && (
-            <div className="flex flex-wrap items-center gap-2">
-              <a href={`/api/export?${q}`} className={buttonVariants({ variant: "outline", size: "sm" })}>CSV</a>
-              <a href={`/api/report?${q}`} className={buttonVariants({ variant: "outline", size: "sm" })}>JSON</a>
-              <a href={`/api/report?${q}&format=md`} className={buttonVariants({ variant: "outline", size: "sm" })}>MD</a>
-              <a href={`/report?${q}`} target="_blank" rel="noreferrer" className={buttonVariants({ variant: "outline", size: "sm" })}>PDF</a>
-              <ShareButton shareToken={shareToken} />
-            </div>
-          )}
-        </div>
+        <form
+          onSubmit={onRun}
+          className="mt-4 flex flex-wrap items-center gap-2 rounded-lg border bg-card p-3"
+        >
+          <Input
+            value={urlInput}
+            onChange={(e) => setUrlInput(e.target.value)}
+            placeholder="yourdomain.com"
+            aria-label="Site URL to audit"
+            inputMode="url"
+            className="h-9 min-w-[12rem] flex-1 font-mono text-sm"
+          />
+          <Label className="flex cursor-pointer items-center gap-2 text-sm font-normal text-muted-foreground">
+            <Checkbox checked={deep} onCheckedChange={(v) => setDeep(!!v)} />
+            Deep scan
+          </Label>
+          <Button type="submit" size="sm" disabled={status === "loading"}>
+            {status === "loading" ? "Auditing…" : "Run audit"}
+          </Button>
+        </form>
       )}
 
       <ScanContext.Provider value={ctx}>
