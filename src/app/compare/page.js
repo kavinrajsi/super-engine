@@ -4,7 +4,7 @@
 
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import ThemeToggle from "@/components/theme-toggle";
+import AppShell from "@/components/app-shell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -38,15 +38,9 @@ function grade(s) {
 
 function Shell({ children }) {
   return (
-    <div className="min-h-screen">
-      <header className="flex h-14 items-center justify-between border-b px-4 sm:px-6">
-        <Link href="/" className="font-bold tracking-tight no-underline">
-          📈 MadRank
-        </Link>
-        <ThemeToggle />
-      </header>
+    <AppShell>
       <div className="mx-auto max-w-5xl space-y-6 p-6">{children}</div>
-    </div>
+    </AppShell>
   );
 }
 

@@ -2,8 +2,7 @@
 // first, as a filterable timeline grouped by year. Static data from the
 // official Search Status Dashboard.
 
-import Link from "next/link";
-import ThemeToggle from "@/components/theme-toggle";
+import AppShell from "@/components/app-shell";
 import { GOOGLE_UPDATES, SOURCE_URL, DATA_AS_OF } from "@/lib/seo/google-updates";
 import UpdatesTimeline from "./updates-timeline";
 
@@ -11,14 +10,7 @@ export const metadata = { title: "Google Algorithm Updates — MadRank" };
 
 export default function GoogleUpdatesPage() {
   return (
-    <div className="min-h-screen">
-      <header className="flex h-14 items-center justify-between border-b px-6">
-        <Link href="/" className="font-bold tracking-tight no-underline">
-          📈 MadRank
-        </Link>
-        <ThemeToggle />
-      </header>
-
+    <AppShell>
       <div className="mx-auto max-w-3xl space-y-6 p-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Google algorithm updates</h1>
@@ -37,6 +29,6 @@ export default function GoogleUpdatesPage() {
 
         <UpdatesTimeline updates={GOOGLE_UPDATES} />
       </div>
-    </div>
+    </AppShell>
   );
 }

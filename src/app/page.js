@@ -7,22 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import ThemeToggle from "@/components/theme-toggle";
-import UserMenu from "@/components/user-menu";
-import SiteNav from "@/components/site-nav";
+import AppShell from "@/components/app-shell";
 
 export default function Home() {
   return (
-    <div className="min-h-screen">
-      <header className="flex h-14 items-center justify-between border-b px-4 sm:px-6">
-        <span className="font-bold tracking-tight">📈 MadRank</span>
-        <div className="flex items-center gap-2 sm:gap-4">
-          <SiteNav />
-          <ThemeToggle />
-          <UserMenu />
-        </div>
-      </header>
-
+    <AppShell>
       <div className="container">
         <div className="hero">
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
@@ -71,6 +60,6 @@ export default function Home() {
           Terms of Service
         </Link>
       </footer>
-    </div>
+    </AppShell>
   );
 }

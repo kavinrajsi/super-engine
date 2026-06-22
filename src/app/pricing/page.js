@@ -2,7 +2,7 @@
 // Pro users see their renewal date + cancel.
 
 import Link from "next/link";
-import ThemeToggle from "@/components/theme-toggle";
+import AppShell from "@/components/app-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -44,14 +44,7 @@ export default async function PricingPage() {
   const pro = isPro(user);
 
   return (
-    <div className="min-h-screen">
-      <header className="flex h-14 items-center justify-between border-b px-6">
-        <Link href="/" className="font-bold tracking-tight no-underline">
-          📈 MadRank
-        </Link>
-        <ThemeToggle />
-      </header>
-
+    <AppShell>
       <div className="mx-auto max-w-3xl space-y-6 p-6">
         <div className="text-center">
           <h1 className="text-3xl font-bold tracking-tight">Simple pricing</h1>
@@ -126,6 +119,6 @@ export default async function PricingPage() {
           Payments are processed securely by Razorpay (UPI, cards, netbanking). Cancel anytime.
         </p>
       </div>
-    </div>
+    </AppShell>
   );
 }

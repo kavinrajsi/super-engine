@@ -1,5 +1,5 @@
 import Link from "next/link";
-import ThemeToggle from "@/components/theme-toggle";
+import AppShell from "@/components/app-shell";
 import { recentScans } from "@/lib/db/scans";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,18 +13,12 @@ export const dynamic = "force-dynamic";
 
 function Gate({ title, children }) {
   return (
-    <div className="min-h-screen">
-      <header className="flex h-14 items-center justify-between border-b px-6">
-        <Link href="/" className="font-bold tracking-tight no-underline">
-          📈 MadRank
-        </Link>
-        <ThemeToggle />
-      </header>
+    <AppShell>
       <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center gap-4 p-6 text-center">
         <h1 className="text-2xl font-bold">{title}</h1>
         {children}
       </div>
-    </div>
+    </AppShell>
   );
 }
 
@@ -66,13 +60,7 @@ export default async function HistoryPage() {
   const scans = await recentScans(user?.id, 50);
 
   return (
-    <div className="min-h-screen">
-      <header className="flex h-14 items-center justify-between border-b px-6">
-        <Link href="/" className="font-bold tracking-tight no-underline">
-          📈 MadRank
-        </Link>
-        <ThemeToggle />
-      </header>
+    <AppShell>
       <div className="mx-auto max-w-3xl space-y-4 p-6">
         <h1 className="text-3xl font-bold tracking-tight">Recent scans</h1>
         {scans.length === 0 ? (
@@ -102,6 +90,6 @@ export default async function HistoryPage() {
           </div>
         )}
       </div>
-    </div>
+    </AppShell>
   );
 }

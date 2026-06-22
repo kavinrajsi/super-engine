@@ -4,7 +4,7 @@
 
 import Link from "next/link";
 import { cookies } from "next/headers";
-import ThemeToggle from "@/components/theme-toggle";
+import AppShell from "@/components/app-shell";
 import { Card, CardContent } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { isGscConfigured } from "@/lib/gsc/oauth";
@@ -19,17 +19,11 @@ export const dynamic = "force-dynamic";
 
 function Shell({ children }) {
   return (
-    <div className="min-h-screen">
-      <header className="flex h-14 items-center justify-between border-b px-6">
-        <Link href="/" className="font-bold tracking-tight no-underline">
-          📈 MadRank
-        </Link>
-        <ThemeToggle />
-      </header>
+    <AppShell>
       <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center gap-4 p-6 text-center">
         {children}
       </div>
-    </div>
+    </AppShell>
   );
 }
 
@@ -77,14 +71,7 @@ export default async function SeoPage({ searchParams }) {
   const errorMsg = sp?.error ? ERRORS[sp.error] || "Something went wrong. Please try again." : null;
 
   return (
-    <div className="min-h-screen">
-      <header className="flex h-14 items-center justify-between border-b px-6">
-        <Link href="/" className="font-bold tracking-tight no-underline">
-          📈 MadRank
-        </Link>
-        <ThemeToggle />
-      </header>
-
+    <AppShell>
       <div className="mx-auto max-w-5xl space-y-4 p-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">SEO insights</h1>
@@ -129,6 +116,6 @@ export default async function SeoPage({ searchParams }) {
           </Card>
         )}
       </div>
-    </div>
+    </AppShell>
   );
 }
