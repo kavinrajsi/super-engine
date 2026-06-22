@@ -24,6 +24,14 @@ export default function ScanGate({ children }) {
     );
   }
 
+  if (status === "empty") {
+    return (
+      <p className="py-6 text-sm text-muted-foreground">
+        Enter a site URL above and run an audit to see this.
+      </p>
+    );
+  }
+
   if (status === "loading" || status === "idle" || !status) {
     return <p className="py-6 text-sm text-muted-foreground">Running site audit…</p>;
   }

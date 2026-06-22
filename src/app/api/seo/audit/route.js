@@ -1,11 +1,12 @@
-// On-demand single-page audit for the /seo dashboard's SEO/Technical/Links/GEO
-// tabs. Derives a URL from the connected Search Console property, reuses a recent
-// saved scan when possible, otherwise runs runScan once. Requires the unified
-// Google connection (gsc_session) — same auth as /api/gsc/report.
-//
-// These dashboard audits are intentionally NOT counted against the daily scan
-// cap: they're a side-effect of viewing your own connected site, not a scan the
-// user explicitly kicked off.
+// On-demand audit powering the /seo dashboard's SEO/Pages/Issues/Technical/GEO/
+// Tracking tabs. Two modes:
+//   - ?url=<site>   audit any URL (no Google needed). Login-gated only. With
+//                   &full=1 it does a multi-page scan (plan.maxPages), &deep=1
+//                   a deep scan; otherwise a cheap single page for the auto view.
+//   - ?site=<gsc>   derive the URL from a connected Search Console property
+//                   (requires gsc_session) — the cheap single-page auto view.
+// Reuses a recent saved scan when possible; explicit full/deep runs force fresh.
+// Returns the share token so /seo can offer share/export of the result.
 
 import { cookies } from "next/headers";
 import { getValidAccessToken } from "@/lib/gsc/tokens";
@@ -14,6 +15,9 @@ import { assertSafeUrl } from "@/lib/seo/safe-fetch";
 import { saveScan, latestScanForUrl } from "@/lib/db/scans";
 import { currentUser } from "@/lib/auth/session";
 import { isAuthConfigured } from "@/lib/auth/google";
+import { planOf } from "@/lib/auth/plan";
+import { listProfiles, touchProfile, createProfile } from "@/lib/db/profiles";
+import { normalizeSiteUrl } from "@/lib/site/active";
 
 export const maxDuration = 60;
 
@@ -48,15 +52,41 @@ function cacheCandidates(url) {
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
+  const url = (searchParams.get("url") || "").trim();
   const site = searchParams.get("site") || "";
-  const force = searchParams.get("force") === "1";
+  const deep = searchParams.get("deep") === "1";
+  const full = deep || searchParams.get("full") === "1";
+  // Explicit full/deep runs always re-scan; cheap auto views reuse the cache.
+  const force = full || searchParams.get("force") === "1";
 
-  const sessionId = (await cookies()).get("gsc_session")?.value;
-  if (!sessionId) return Response.json({ error: "not_connected" }, { status: 401 });
+  // Login-gated (when auth is configured); the URL path needs no Google.
+  const appUser = isAuthConfigured() ? await currentUser() : null;
+  if (isAuthConfigured() && !appUser) {
+    return Response.json({ error: "unauthorized" }, { status: 401 });
+  }
+  const userId = appUser?.id ?? null;
+  const plan = planOf(appUser);
 
-  const scanUrl = siteUrlForScan(site);
-  if (!scanUrl) {
-    return Response.json({ error: "no_url_for_ga_property" }, { status: 400 });
+  let scanUrl = null;
+  let deepScan = false;
+  let maxPages = 1;
+  let explicit = false;
+
+  if (url) {
+    scanUrl = url;
+    explicit = full; // a user-initiated audit (vs. the cheap auto view)
+    deepScan = deep && plan.deepScan;
+    maxPages = full ? plan.maxPages : 1;
+  } else if (site) {
+    // Auto view from a connected Search Console property — requires Google.
+    const sessionId = (await cookies()).get("gsc_session")?.value;
+    if (!sessionId) return Response.json({ error: "not_connected" }, { status: 401 });
+    const auth = await getValidAccessToken(sessionId);
+    if (!auth) return Response.json({ error: "not_connected" }, { status: 401 });
+    scanUrl = siteUrlForScan(site);
+    if (!scanUrl) return Response.json({ error: "no_url_for_ga_property" }, { status: 400 });
+  } else {
+    return Response.json({ error: "missing_target" }, { status: 400 });
   }
 
   let safeUrl;
@@ -67,21 +97,32 @@ export async function GET(request) {
   }
 
   try {
-    const auth = await getValidAccessToken(sessionId);
-    if (!auth) return Response.json({ error: "not_connected" }, { status: 401 });
-
-    const appUser = isAuthConfigured() ? await currentUser() : null;
-    const userId = appUser?.id ?? null;
-
-    // Reuse a recent audit unless the caller forces a fresh scan.
+    // Reuse a recent audit unless this is an explicit/forced run.
     if (!force) {
       const cached = await latestScanForUrl(cacheCandidates(safeUrl), userId, 60);
       if (cached) return Response.json({ result: cached, cached: true });
     }
 
-    const result = await runScan(safeUrl, { deepScan: false, maxPages: 1 });
-    await saveScan(result, userId); // best-effort
-    return Response.json({ result, cached: false });
+    const result = await runScan(safeUrl, { deepScan, maxPages });
+    const shareToken = await saveScan(result, userId); // best-effort
+
+    // Remember explicitly-audited sites in the active-site store (mirror /scan).
+    if (explicit && appUser) {
+      try {
+        const host = new URL(result.rootUrl).host.replace(/^www\./, "");
+        const profiles = await listProfiles(appUser.id);
+        const match = profiles.find((p) => {
+          const u = normalizeSiteUrl(p.website_url);
+          return u && u.host.replace(/^www\./, "") === host;
+        });
+        if (match) await touchProfile(match.id, appUser.id);
+        else await createProfile(appUser.id, { name: host, websiteUrl: result.rootUrl });
+      } catch {
+        /* best-effort */
+      }
+    }
+
+    return Response.json({ result, cached: false, shareToken });
   } catch (e) {
     return Response.json({ error: e.message }, { status: 502 });
   }

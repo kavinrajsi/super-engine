@@ -5,7 +5,6 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import AppShell from "@/components/app-shell";
-import { Card, CardContent } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { isGscConfigured } from "@/lib/gsc/oauth";
 import { getSession } from "@/lib/gsc/tokens";
@@ -54,14 +53,16 @@ export default async function SeoPage({ searchParams }) {
   const session = configured && sessionId ? await getSession(sessionId) : null;
   const errorMsg = sp?.error ? ERRORS[sp.error] || "Something went wrong. Please try again." : null;
 
+  // The audit tabs work without Google; the Traffic tab prompts to connect when
+  // not linked. So always render the dashboard and pass the connection state.
   return (
     <AppShell>
       <div className="mx-auto max-w-5xl space-y-4 p-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">SEO insights</h1>
           <p className="text-muted-foreground">
-            Connect Google to see your Analytics traffic and Search Console queries, pages, and
-            ranking opportunities — all in one place.
+            Audit any site across SEO, pages, links, technical, GEO and tracking — and connect
+            Google to add your Analytics traffic and Search Console data.
           </p>
         </div>
 
@@ -71,34 +72,7 @@ export default async function SeoPage({ searchParams }) {
           </p>
         )}
 
-        {!configured ? (
-          <Card>
-            <CardContent className="space-y-2 py-6 text-sm text-muted-foreground">
-              <p className="font-medium text-foreground">Google integration isn&rsquo;t configured.</p>
-              <p>
-                Set <code className="font-mono">GOOGLE_CLIENT_ID</code> and{" "}
-                <code className="font-mono">GOOGLE_CLIENT_SECRET</code> (and enable the{" "}
-                <span className="font-medium">Analytics Data API</span>,{" "}
-                <span className="font-medium">Analytics Admin API</span>, and Search Console API in
-                Google Cloud) to turn this on.
-              </p>
-            </CardContent>
-          </Card>
-        ) : session ? (
-          <SeoDashboard email={session.email} />
-        ) : (
-          <Card>
-            <CardContent className="flex flex-col items-start gap-3 py-6">
-              <p className="text-sm text-muted-foreground">
-                You&rsquo;ll be redirected to Google to grant read-only access to your Analytics and
-                Search Console data. We never see your password, and you can disconnect anytime.
-              </p>
-              <a href="/api/gsc/auth" className={buttonVariants({ size: "lg" })}>
-                Connect Google
-              </a>
-            </CardContent>
-          </Card>
-        )}
+        <SeoDashboard email={session?.email} connected={!!session} />
       </div>
     </AppShell>
   );
