@@ -1,10 +1,8 @@
 // Competitor discovery (Server Component). Pro-gated shell (mirrors /compare);
 // the discovery itself runs client-side on demand via /api/seo/competitors.
 
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import AppShell from "@/components/app-shell";
-import { buttonVariants } from "@/components/ui/button";
 import { currentUser } from "@/lib/auth/session";
 import { isAuthConfigured } from "@/lib/auth/google";
 import { isPro } from "@/lib/auth/plan";
@@ -33,11 +31,9 @@ export default async function CompetitorsPage() {
         <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
           <h1 className="text-2xl font-bold">Competitor discovery is a Pro feature</h1>
           <p className="text-muted-foreground">
-            Upgrade to Pro to auto-discover who competes with your site and benchmark against them.
+            Auto-discovering who competes with your site and benchmarking against them is available
+            on the Pro plan.
           </p>
-          <Link href="/pricing" className={buttonVariants()}>
-            Upgrade to Pro
-          </Link>
         </div>
       </Shell>
     );

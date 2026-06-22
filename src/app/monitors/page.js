@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 import AppShell from "@/components/app-shell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { currentUser } from "@/lib/auth/session";
 import { isAuthConfigured } from "@/lib/auth/google";
@@ -38,11 +38,9 @@ export default async function MonitorsPage() {
         <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
           <h1 className="text-2xl font-bold">Monitoring is a Pro feature</h1>
           <p className="text-muted-foreground">
-            Upgrade to Pro to re-scan your sites on a schedule and get alerted when scores drop.
+            Re-scanning your sites on a schedule and getting alerted when scores drop is available
+            on the Pro plan.
           </p>
-          <Link href="/pricing" className={buttonVariants()}>
-            Upgrade to Pro
-          </Link>
         </div>
       </Shell>
     );

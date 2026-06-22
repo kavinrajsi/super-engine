@@ -28,7 +28,6 @@ import {
   FileText,
   Lightbulb,
   Settings2,
-  CreditCard,
 } from "lucide-react";
 import ThemeToggle from "@/components/theme-toggle";
 
@@ -43,7 +42,6 @@ const LINKS = [
   { href: "/articles", label: "Articles", icon: FileText },
   { href: "/post-ideas", label: "Post Ideas", icon: Lightbulb },
   { href: "/ai-settings", label: "AI Settings", icon: Settings2 },
-  { href: "/pricing", label: "Pricing", icon: CreditCard },
 ];
 
 export default function AppNavSidebar() {

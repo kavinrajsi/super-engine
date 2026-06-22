@@ -55,12 +55,9 @@ export default async function SeoPage({ searchParams }) {
       <Shell>
         <h1 className="text-2xl font-bold">Analytics &amp; Search Console are a Pro feature</h1>
         <p className="text-muted-foreground">
-          Upgrade to Pro to connect Google Analytics and Search Console and see your traffic,
-          queries, pages, and ranking opportunities in one place.
+          Connecting Google Analytics and Search Console to see your traffic, queries, pages, and
+          ranking opportunities in one place is available on the Pro plan.
         </p>
-        <Link href="/pricing" className={buttonVariants()}>
-          Upgrade to Pro
-        </Link>
       </Shell>
     );
   }

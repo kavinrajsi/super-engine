@@ -48,11 +48,8 @@ export default async function HistoryPage() {
     return (
       <Gate title="History is a Pro feature">
         <p className="text-muted-foreground">
-          Upgrade to Pro to keep and revisit your saved scan history.
+          Keeping and revisiting your saved scan history is available on the Pro plan.
         </p>
-        <Link href="/pricing" className={buttonVariants()}>
-          Upgrade to Pro
-        </Link>
       </Gate>
     );
   }

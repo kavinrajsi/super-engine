@@ -112,11 +112,9 @@ export default async function ComparePage({ searchParams }) {
         <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
           <h1 className="text-2xl font-bold">Competitor benchmarking is a Pro feature</h1>
           <p className="text-muted-foreground">
-            Upgrade to Pro to compare your site against competitors on SEO and AI-search readiness.
+            Comparing your site against competitors on SEO and AI-search readiness is available on
+            the Pro plan.
           </p>
-          <Link href="/pricing" className={buttonVariants()}>
-            Upgrade to Pro
-          </Link>
         </div>
       </Shell>
     );

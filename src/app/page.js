@@ -2,7 +2,6 @@
 // to convert: live "report card" hero, the four-lens AI-search pitch, real
 // feature grid, pricing teaser, and a repeated audit CTA.
 
-import Link from "next/link";
 import {
   ListChecks,
   Wrench,
@@ -12,10 +11,7 @@ import {
   Sparkles,
   FileCheck,
   Link2,
-  ArrowRight,
 } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
-import { PLANS, PRO_PRICING } from "@/lib/auth/plan";
 import SiteFooter from "@/components/site-footer";
 import MarketingNav from "@/components/marketing/marketing-nav";
 import HeroAuditForm from "@/components/marketing/hero-audit-form";
@@ -150,20 +146,6 @@ const STEPS = [
   },
 ];
 
-const FREE_POINTS = [
-  `${PLANS.free.scansPerDay} scans a day`,
-  `${PLANS.free.maxPages} pages per scan`,
-  "On-page SEO + AI-search audit",
-  "Plain-language fixes & issues",
-];
-const PRO_POINTS = [
-  `${PLANS.pro.scansPerDay} scans a day`,
-  `${PLANS.pro.maxPages} pages per scan + deep scan`,
-  "Performance (PageSpeed) & AI fixes",
-  "Search Console + GA4 dashboard",
-  "Competitors, monitors & saved history",
-];
-
 export default function Home() {
   return (
     <div className="min-h-screen">
@@ -277,78 +259,6 @@ export default function Home() {
                   <p className="mt-1.5 text-sm text-muted-foreground">{s.blurb}</p>
                 </div>
               ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Pricing teaser */}
-        <section id="pricing" className="border-b" aria-label="Pricing">
-          <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:py-20">
-            <div className="text-center">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                Start free. Upgrade when you need more.
-              </h2>
-              <p className="mt-3 text-lg text-muted-foreground">
-                No card to start. {PLANS.free.scansPerDay} full audits a day on the house.
-              </p>
-            </div>
-
-            <div className="mt-10 grid gap-4 md:grid-cols-2">
-              {/* Free */}
-              <div className="flex flex-col rounded-xl border bg-card p-6">
-                <div className="text-sm font-semibold text-muted-foreground">Free</div>
-                <div className="mt-2 font-mono text-4xl font-bold">₹0</div>
-                <ul className="mt-5 flex-1 space-y-2">
-                  {FREE_POINTS.map((p) => (
-                    <li key={p} className="flex items-start gap-2 text-sm">
-                      <span className="mt-0.5" style={{ color: "var(--pass)" }}>✓</span>
-                      <span>{p}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href="/login"
-                  className={buttonVariants({ variant: "outline", className: "mt-6 text-foreground" })}
-                >
-                  Start free
-                </Link>
-              </div>
-
-              {/* Pro */}
-              <div className="relative flex flex-col rounded-xl border-2 border-primary bg-card p-6">
-                <span className="absolute -top-3 left-6 rounded-full bg-primary px-3 py-0.5 text-xs font-semibold text-primary-foreground">
-                  Popular
-                </span>
-                <div className="text-sm font-semibold text-muted-foreground">Pro</div>
-                <div className="mt-2 flex items-baseline gap-2">
-                  <span className="font-mono text-4xl font-bold">{PRO_PRICING.monthly.amount}</span>
-                  <span className="text-sm text-muted-foreground">{PRO_PRICING.monthly.per}</span>
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  or {PRO_PRICING.annual.amount}
-                  {PRO_PRICING.annual.per} — {PRO_PRICING.annual.note}
-                </p>
-                <ul className="mt-5 flex-1 space-y-2">
-                  {PRO_POINTS.map((p) => (
-                    <li key={p} className="flex items-start gap-2 text-sm">
-                      <span className="mt-0.5" style={{ color: "var(--pass)" }}>✓</span>
-                      <span>{p}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/pricing" className={buttonVariants({ className: "mt-6" })}>
-                  Go Pro
-                </Link>
-              </div>
-            </div>
-
-            <div className="mt-6 text-center">
-              <Link
-                href="/pricing"
-                className="inline-flex items-center gap-1 text-sm font-medium text-primary-link hover:underline"
-              >
-                See the full plan comparison <ArrowRight className="size-4" />
-              </Link>
             </div>
           </div>
         </section>

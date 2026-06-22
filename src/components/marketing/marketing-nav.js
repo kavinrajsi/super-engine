@@ -13,7 +13,6 @@ import ThemeToggle from "@/components/theme-toggle";
 const LINKS = [
   { href: "#features", label: "Features" },
   { href: "#ai-search", label: "AI search" },
-  { href: "#pricing", label: "Pricing" },
 ];
 
 export default function MarketingNav() {

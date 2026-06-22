@@ -8,7 +8,6 @@ const LINKS = [
   { href: "/competitors", label: "Competitors" },
   { href: "/articles", label: "Articles" },
   { href: "/google-updates", label: "Algorithm updates" },
-  { href: "/pricing", label: "Pricing" },
   { href: "/privacy", label: "Privacy" },
   { href: "/terms", label: "Terms" },
 ];

@@ -64,14 +64,7 @@ export default function UserMenu() {
         >
           <div className="truncate text-sm font-medium">{user.name || "Account"}</div>
           {user.email && <div className="truncate text-xs text-muted-foreground">{user.email}</div>}
-          <Link
-            href="/pricing"
-            className="mt-3 block rounded-md px-2 py-1.5 text-sm hover:bg-muted"
-            onClick={() => setOpen(false)}
-          >
-            {user.plan === "pro" ? "Manage plan" : "Upgrade to Pro"}
-          </Link>
-          <div className="mt-1">
+          <div className="mt-3">
             <Button variant="outline" size="sm" className="w-full" onClick={signOut}>
               Sign out
             </Button>

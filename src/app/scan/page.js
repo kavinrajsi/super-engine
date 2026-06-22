@@ -11,7 +11,6 @@ import { saveScan } from "@/lib/db/scans";
 import { currentUser } from "@/lib/auth/session";
 import { isAuthConfigured } from "@/lib/auth/google";
 import { planOf, scansUsedToday } from "@/lib/auth/plan";
-import { buttonVariants } from "@/components/ui/button";
 import ScanDashboard from "./scan-dashboard";
 
 export const metadata = { title: "Scan results — MadRank" };
@@ -21,12 +20,9 @@ function LimitState({ used, limit }) {
     <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center gap-4 p-6 text-center">
       <h1 className="text-2xl font-bold">Daily scan limit reached</h1>
       <p className="text-muted-foreground">
-        You&rsquo;ve used {used}/{limit} free scans today. Upgrade to Pro for higher limits, deep
-        scans, Performance, Search Console, and saved history.
+        You&rsquo;ve used {used}/{limit} free scans today. Higher limits, deep scans, Performance,
+        Search Console, and saved history are available on the Pro plan.
       </p>
-      <Link href="/pricing" className={buttonVariants()}>
-        Upgrade to Pro
-      </Link>
     </div>
   );
 }
