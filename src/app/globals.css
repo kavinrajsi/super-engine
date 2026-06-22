@@ -63,11 +63,11 @@ body {
   line-height: 1.5;
 }
 
-/* Links never underline (product decision) — this unlayered rule also wins over
-   Tailwind's `underline` utility on anchors. */
+/* Links never underline (product decision). Kept unlayered so it also wins over
+   Tailwind's `underline` utility on anchors. The link *color* lives in
+   @layer base (below) so button text-color utilities can override it. */
 a,
 a:hover {
-  color: var(--primary-link);
   text-decoration: none;
 }
 
@@ -236,6 +236,10 @@ a:hover {
   }
   html {
     @apply font-sans;
+  }
+  /* Default link color — in @layer base so button text-color utilities win. */
+  a {
+    color: var(--primary-link);
   }
   /* Tailwind v4 Preflight no longer sets a pointer cursor on buttons. */
   button:not(:disabled),

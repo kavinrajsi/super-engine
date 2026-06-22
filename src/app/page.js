@@ -308,7 +308,7 @@ export default function Home() {
                 </ul>
                 <Link
                   href="/login"
-                  className={buttonVariants({ variant: "outline", className: "mt-6" })}
+                  className={buttonVariants({ variant: "outline", className: "mt-6 text-foreground" })}
                 >
                   Start free
                 </Link>

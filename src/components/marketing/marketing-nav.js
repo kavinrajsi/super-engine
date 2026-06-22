@@ -44,7 +44,7 @@ export default function MarketingNav() {
           <ThemeToggle />
           <Link
             href="/login"
-            className={buttonVariants({ variant: "outline", size: "sm", className: "hidden sm:inline-flex" })}
+            className={buttonVariants({ variant: "outline", size: "sm", className: "hidden text-foreground sm:inline-flex" })}
           >
             Sign in
           </Link>

@@ -42,7 +42,7 @@ export default function HeroAuditForm({ location = "hero" }) {
           <Link
             href="/login"
             onClick={() => ph?.capture("cta_clicked", { cta: "start_free", location })}
-            className={buttonVariants({ variant: "outline", size: "lg", className: "h-11 px-5" })}
+            className={buttonVariants({ variant: "outline", size: "lg", className: "h-11 px-5 text-foreground" })}
           >
             Start free with Google
           </Link>
