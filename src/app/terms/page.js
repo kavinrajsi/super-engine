@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import ThemeToggle from "@/components/theme-toggle";
+import SiteFooter from "@/components/site-footer";
 
 export const metadata = { title: "Terms of Service — MadRank" };
 
@@ -20,6 +21,7 @@ function Shell({ children }) {
         <ThemeToggle />
       </header>
       <div className="mx-auto max-w-3xl space-y-6 p-6">{children}</div>
+      <SiteFooter />
     </div>
   );
 }

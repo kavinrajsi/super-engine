@@ -12,6 +12,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import UserMenu from "@/components/user-menu";
 import AppNavSidebar from "@/components/app-nav-sidebar";
+import SiteFooter from "@/components/site-footer";
 
 export default function AppShell({ children, title }) {
   return (
@@ -29,6 +30,7 @@ export default function AppShell({ children, title }) {
           </div>
         </header>
         <main className="flex-1">{children}</main>
+        <SiteFooter />
       </SidebarInset>
     </SidebarProvider>
   );

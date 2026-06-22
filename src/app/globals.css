@@ -63,12 +63,12 @@ body {
   line-height: 1.5;
 }
 
-a {
+/* Links never underline (product decision) — this unlayered rule also wins over
+   Tailwind's `underline` utility on anchors. */
+a,
+a:hover {
   color: var(--primary-link);
   text-decoration: none;
-}
-a:hover {
-  text-decoration: underline;
 }
 
 .container {

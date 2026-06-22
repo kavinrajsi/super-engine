@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Button, buttonVariants } from "@/components/ui/button";
+import SiteFooter from "@/components/site-footer";
 import AppSidebar from "./app-sidebar";
 import OverviewPanel from "./overview-panel";
 import PagesPanel from "./pages-panel";
@@ -134,6 +135,7 @@ export default function ScanDashboard({ result, exportHref, reportHref, shareTok
             (pro ? <PerformancePanel url={result.rootUrl} /> : <ProUpsell feature="Performance" />)}
           {active === "tracking" && <TrackingPanel analytics={result.analytics} />}
         </main>
+        <SiteFooter />
       </SidebarInset>
     </SidebarProvider>
   );
