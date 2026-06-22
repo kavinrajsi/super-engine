@@ -1,6 +1,7 @@
 // Home page: a single URL input that kicks off a scan.
 // Plain GET form -> /scan?url=...&deep=... so it works without client JS.
 
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -60,6 +61,16 @@ export default function Home() {
           </Card>
         </div>
       </div>
+
+      <footer className="border-t px-6 py-6 text-center text-sm text-muted-foreground">
+        <Link href="/privacy" className="underline">
+          Privacy Policy
+        </Link>
+        {" · "}
+        <Link href="/terms" className="underline">
+          Terms of Service
+        </Link>
+      </footer>
     </div>
   );
 }

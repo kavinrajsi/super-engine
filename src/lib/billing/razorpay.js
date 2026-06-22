@@ -20,6 +20,16 @@ export function publishableKeyId() {
   return process.env.RAZORPAY_KEY_ID || null;
 }
 
+// Test vs live is inherent in the key prefix (rzp_test_ / rzp_live_); the
+// NEXT_PUBLIC_RAZORPAY_TEST_MODE flag is an optional override for forcing the
+// test-mode UI (e.g. QA). Defaults to auto-detection so it can't silently drift.
+export function isTestMode() {
+  const flag = process.env.NEXT_PUBLIC_RAZORPAY_TEST_MODE;
+  if (flag === "true") return true;
+  if (flag === "false") return false;
+  return (process.env.RAZORPAY_KEY_ID || "").startsWith("rzp_test_");
+}
+
 export function proPlanId(cycle) {
   return cycle === "annual"
     ? process.env.RAZORPAY_PRO_PLAN_ID_ANNUAL || process.env.RAZORPAY_PRO_PLAN_ID

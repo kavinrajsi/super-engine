@@ -73,6 +73,18 @@ export default async function LoginPage({ searchParams }) {
             </p>
           </CardContent>
         </Card>
+
+        <p className="text-center text-xs text-muted-foreground">
+          By continuing you agree to our{" "}
+          <Link href="/terms" className="underline">
+            Terms
+          </Link>{" "}
+          and{" "}
+          <Link href="/privacy" className="underline">
+            Privacy Policy
+          </Link>
+          .
+        </p>
       </div>
     </div>
   );

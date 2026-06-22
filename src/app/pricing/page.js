@@ -9,7 +9,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { currentUser } from "@/lib/auth/session";
 import { isAuthConfigured } from "@/lib/auth/google";
 import { PLANS, PRO_PRICING, isPro } from "@/lib/auth/plan";
-import { isBillingConfigured } from "@/lib/billing/razorpay";
+import { isBillingConfigured, isTestMode } from "@/lib/billing/razorpay";
 import UpgradeButton from "./upgrade-button";
 import ManageSubscription from "./manage-subscription";
 
@@ -57,6 +57,13 @@ export default async function PricingPage() {
           <h1 className="text-3xl font-bold tracking-tight">Simple pricing</h1>
           <p className="text-muted-foreground">Start free. Upgrade when you need more.</p>
         </div>
+
+        {isBillingConfigured() && isTestMode() && (
+          <p className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-center text-sm text-warning">
+            ⚠️ Test mode — no real charge. Use Razorpay test card{" "}
+            <code className="font-mono">4111 1111 1111 1111</code>, any future expiry &amp; CVV.
+          </p>
+        )}
 
         <div className="grid gap-4 sm:grid-cols-2">
           {/* Free */}
