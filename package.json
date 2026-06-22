@@ -9,6 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.85",
+    "@ai-sdk/google": "^3.0.83",
+    "@ai-sdk/openai": "^3.0.74",
     "@base-ui/react": "^1.5.0",
     "@browserbasehq/sdk": "^2.14.0",
     "@neondatabase/serverless": "^1.1.0",
