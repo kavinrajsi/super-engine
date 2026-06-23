@@ -146,6 +146,33 @@ export async function domainsWithSerpSnapshots(days = 7) {
   }
 }
 
+// --- GSC Page Indexing snapshots (URL Inspection API results, TTL-reused) ---
+
+export async function saveGscIndexingSnapshot({ siteUrl, data }) {
+  if (!sql || !siteUrl || !data) return;
+  try {
+    await sql`
+      INSERT INTO gsc_indexing_snapshots (site_url, data)
+      VALUES (${siteUrl}, ${JSON.stringify(data)}::jsonb)`;
+  } catch {
+    /* best-effort */
+  }
+}
+
+export async function latestGscIndexingSnapshot(siteUrl, maxAgeMins = 1440) {
+  if (!sql || !siteUrl) return null;
+  try {
+    const rows = await sql`
+      SELECT data FROM gsc_indexing_snapshots
+      WHERE site_url = ${siteUrl}
+        AND created_at > now() - make_interval(mins => ${maxAgeMins})
+      ORDER BY created_at DESC LIMIT 1`;
+    return rows[0]?.data || null;
+  } catch {
+    return null;
+  }
+}
+
 export async function saveCompetitorSnapshot({ domain, data }) {
   if (!sql || !domain || !data) return;
   try {

@@ -9,6 +9,7 @@
 
 import { useEffect, useState } from "react";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
+import Gsc404Urls from "./gsc-404-urls";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -248,7 +249,7 @@ export default function GscDashboard({ email, domain, site, noMatch }) {
             </CardContent>
           </Card>
 
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-6">
             <MetricTable caption="Top queries" label="Query" rows={report.topQueries} keyName="query" />
             <MetricTable caption="Top pages" label="Page" rows={report.topPages} keyName="page" />
           </div>
@@ -295,6 +296,7 @@ export default function GscDashboard({ email, domain, site, noMatch }) {
               )}
             </CardContent>
           </Card>
+          <Gsc404Urls site={site} />
         </>
       )}
     </div>
