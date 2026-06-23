@@ -187,7 +187,7 @@ export async function buildGaReport(token, property, days) {
       orderBys: [{ dimension: { dimensionName: "date" } }],
       limit: 1000,
     }),
-    runReport(token, property, dimBody(current, "pagePath", ["screenPageViews", "activeUsers"], 25)),
+    runReport(token, property, dimBody(current, "pagePath", ["screenPageViews", "activeUsers"], 250)),
     runReport(token, property, dimBody(current, "sessionDefaultChannelGroup", ["sessions", "activeUsers"], 12)),
     runReport(token, property, dimBody(current, "country", ["activeUsers", "sessions"], 12)),
   ]);

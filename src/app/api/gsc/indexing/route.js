@@ -9,7 +9,7 @@ import { buildIndexingReport } from "@/lib/gsc/api";
 import { saveGscIndexingSnapshot, latestGscIndexingSnapshot } from "@/lib/db/records";
 import { rateLimitResponse } from "@/lib/rate-limit";
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);

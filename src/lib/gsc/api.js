@@ -110,7 +110,7 @@ export function strikingDistance(json) {
     .map((r) => ({ query: r.keys?.[0] ?? "", ...rowToMetric(r) }))
     .filter((r) => r.position >= 4.5 && r.position <= 20 && r.impressions >= 10)
     .sort((a, b) => b.impressions - a.impressions)
-    .slice(0, 25);
+    .slice(0, 100);
 }
 
 function delta(curr, prev) {
@@ -203,20 +203,28 @@ export async function buildIndexingReport(token, siteUrl) {
     import("../seo/sitemap.js").then((m) => m.fetchSitemap(origin)).catch(() => ({ urls: [] })),
   ]);
 
-  // Sample up to 50 URLs, filtered to the property origin
+  // Up to 1990 URLs (just under Google's 2,000/day/property quota), filtered to
+  // the property origin. Processed in batches of 50 to avoid flooding the API.
+  const MAX_INSPECT = 1990;
+  const BATCH_SIZE = 50;
   const prefix = origin.endsWith("/") ? origin : `${origin}/`;
   const allUrls = (sitemapData.urls || []).map((u) => (typeof u === "string" ? u : u.url)).filter(Boolean);
   const candidates = [...new Set(allUrls)]
     .filter((u) => u === origin || u.startsWith(prefix))
-    .slice(0, 50);
+    .slice(0, MAX_INSPECT);
 
-  // Inspect all candidates in parallel (allSettled so one failure doesn't abort the rest)
-  const settled = await Promise.allSettled(candidates.map((u) => inspectUrl(token, siteUrl, u)));
-  const inspections = settled.map((r, i) =>
-    r.status === "fulfilled"
-      ? r.value
-      : { url: candidates[i], verdict: null, reason: "Inspection failed", source: null, indexed: false, error: r.reason?.message }
-  );
+  // Inspect in sequential batches so a single request can't exhaust the daily quota
+  // in one burst. Each batch runs fully parallel; batches run one after the next.
+  const inspections = [];
+  for (let i = 0; i < candidates.length; i += BATCH_SIZE) {
+    const batch = candidates.slice(i, i + BATCH_SIZE);
+    const settled = await Promise.allSettled(batch.map((u) => inspectUrl(token, siteUrl, u)));
+    inspections.push(...settled.map((r, j) =>
+      r.status === "fulfilled"
+        ? r.value
+        : { url: batch[j], verdict: null, reason: "Inspection failed", source: null, indexed: false, error: r.reason?.message }
+    ));
+  }
 
   // Aggregate reasons for non-indexed pages
   const byReason = {};
@@ -244,9 +252,9 @@ export async function buildReport(token, siteUrl, days) {
   const [byDate, prevByDate, queries, pages, strike] = await Promise.all([
     searchAnalytics(token, siteUrl, { ...current, dimensions: ["date"], rowLimit: 1000 }),
     searchAnalytics(token, siteUrl, { ...previous, dimensions: ["date"], rowLimit: 1000 }),
-    searchAnalytics(token, siteUrl, { ...current, dimensions: ["query"], rowLimit: 25 }),
-    searchAnalytics(token, siteUrl, { ...current, dimensions: ["page"], rowLimit: 25 }),
     searchAnalytics(token, siteUrl, { ...current, dimensions: ["query"], rowLimit: 250 }),
+    searchAnalytics(token, siteUrl, { ...current, dimensions: ["page"], rowLimit: 250 }),
+    searchAnalytics(token, siteUrl, { ...current, dimensions: ["query"], rowLimit: 1990 }),
   ]);
 
   const totals = totalsFromRows(byDate);
