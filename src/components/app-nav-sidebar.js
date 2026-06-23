@@ -47,7 +47,7 @@ function buildGroups(scanHref) {
       label: "Start",
       links: [
         { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-        { href: "/ask", label: "Ask", icon: MessageSquare },
+        { href: "/ask", label: "Ask AI", icon: MessageSquare },
       ],
     },
     {
@@ -58,7 +58,7 @@ function buildGroups(scanHref) {
         { href: "/competitors", label: "Competitors", icon: Users },
         { href: "/compare", label: "Compare", icon: GitCompareArrows },
         { href: "/monitors", label: "Monitors", icon: Radar },
-        { href: "/google-updates", label: "Algorithm updates", icon: CalendarClock },
+        { href: "/google-updates", label: "Algorithm Updates", icon: CalendarClock },
       ],
     },
     {
