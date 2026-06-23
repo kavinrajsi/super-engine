@@ -63,11 +63,12 @@ export default async function MonitorsPage() {
             <select
               name="cadence"
               aria-label="Cadence"
+              defaultValue="weekly"
               disabled={atCap}
               className="h-10 rounded-md border bg-background px-2 text-sm"
             >
               <option value="daily">Daily</option>
-              <option value="weekly" selected>Weekly</option>
+              <option value="weekly">Weekly</option>
               <option value="monthly">Monthly</option>
             </select>
             <label className="flex items-center gap-2 text-sm text-muted-foreground">

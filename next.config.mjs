@@ -4,9 +4,14 @@
 // and the next-themes anti-flash script; PostHog + Google + the AI gateway are
 // reached over https (covered by connect-src https:). frame-ancestors 'none'
 // blocks clickjacking regardless. Tighten with nonces later if desired.
+//
+// 'unsafe-eval' is added ONLY in development — React/Turbopack use eval() in dev
+// for HMR + debugging (callstack reconstruction). Production React never uses
+// eval(), so prod keeps the stricter policy.
+const isDev = process.env.NODE_ENV !== "production";
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https:",
   "font-src 'self' data:",
