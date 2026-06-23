@@ -218,6 +218,15 @@ a:hover {
   --sidebar-ring: oklch(0.72 0.19 45);
 }
 
+/* ---- Audit loading bar sweep (loops while a scan is in progress) ---- */
+@keyframes madrank-progress {
+  0% { transform: translateX(-250%); }
+  100% { transform: translateX(450%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .audit-progress-bar { animation: none !important; width: 100% !important; opacity: 0.4; }
+}
+
 /* ---- Marketing "instrument" motion (used sparingly on the landing) ---- */
 @keyframes madrank-scanline {
   0% { transform: translateX(-100%); opacity: 0; }

@@ -26,14 +26,37 @@ export default function ScanGate({ children }) {
 
   if (status === "empty") {
     return (
-      <p className="py-6 text-sm text-muted-foreground">
-        Enter a site URL above and run an audit to see this.
-      </p>
+      <div className="py-6">
+        <p className="text-sm font-medium text-foreground">Enter a URL to audit</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Type any site URL in the field above and click Run audit.
+        </p>
+      </div>
     );
   }
 
   if (status === "loading" || status === "idle" || !status) {
-    return <p className="py-6 text-sm text-muted-foreground">Running site audit…</p>;
+    return (
+      <div className="space-y-3 py-6">
+        <p className="flex items-center gap-2 text-sm text-muted-foreground">
+          <span
+            className="inline-block h-2 w-2 shrink-0 rounded-full bg-primary"
+            style={{ animation: "madrank-blink 1.8s steps(2, start) infinite" }}
+            aria-hidden="true"
+          />
+          Running site audit — this takes a few seconds
+        </p>
+        <div className="space-y-2" aria-hidden="true">
+          {[72, 55, 64, 40].map((w, i) => (
+            <div
+              key={i}
+              className="h-2 rounded-full bg-muted"
+              style={{ width: `${w}%`, animation: `madrank-blink 1.8s steps(2, start) ${i * 0.2}s infinite` }}
+            />
+          ))}
+        </div>
+      </div>
+    );
   }
 
   if (status === "error") {

@@ -187,26 +187,45 @@ export default function SeoDashboard({ email, connected = false, initialUrl = ""
 
       {/* Audit bar — type any URL, optionally deep-scan, and run. */}
       {showAuditTools && (
-        <form
-          onSubmit={onRun}
-          className="mt-4 flex flex-wrap items-center gap-2 rounded-lg border bg-card p-3"
-        >
-          <Input
-            value={urlInput}
-            onChange={(e) => setUrlInput(e.target.value)}
-            placeholder="yourdomain.com"
-            aria-label="Site URL to audit"
-            inputMode="url"
-            className="h-9 min-w-[12rem] flex-1 font-mono text-sm"
-          />
-          <Label className="flex cursor-pointer items-center gap-2 text-sm font-normal text-muted-foreground">
-            <Checkbox checked={deep} onCheckedChange={(v) => setDeep(!!v)} />
-            Deep scan
-          </Label>
-          <Button type="submit" size="sm" disabled={status === "loading"}>
-            {status === "loading" ? "Auditing…" : "Run audit"}
-          </Button>
-        </form>
+        <div className="mt-4 space-y-1.5">
+          <form
+            onSubmit={onRun}
+            className="flex flex-wrap items-center gap-2 rounded-lg border bg-card p-3 shadow-sm"
+          >
+            <Input
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
+              placeholder="yourdomain.com"
+              aria-label="Site URL to audit"
+              inputMode="url"
+              aria-invalid={status === "error" || undefined}
+              className="h-9 min-w-[12rem] flex-1 font-mono text-sm"
+            />
+            <Label className="flex cursor-pointer items-center gap-2 text-sm font-normal text-muted-foreground">
+              <Checkbox checked={deep} onCheckedChange={(v) => setDeep(!!v)} />
+              Deep scan
+            </Label>
+            <Button
+              type="submit"
+              size="lg"
+              disabled={status === "loading"}
+              className="shrink-0 bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              {status === "loading" ? "Auditing…" : "Run audit"}
+            </Button>
+          </form>
+          {status === "error" && error && (
+            <p className="px-1 text-sm text-error">{error}</p>
+          )}
+          {status === "loading" && (
+            <div className="overflow-hidden rounded-full bg-border" style={{ height: "2px" }}>
+              <div
+                className="audit-progress-bar h-full w-1/3 rounded-full bg-primary"
+                style={{ animation: "madrank-progress 1.4s ease-in-out infinite" }}
+              />
+            </div>
+          )}
+        </div>
       )}
 
       <ScanContext.Provider value={ctx}>
