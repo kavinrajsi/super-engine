@@ -26,6 +26,7 @@ import { latestScanForUrl } from "@/lib/db/scans";
 import { listContent } from "@/lib/db/content";
 import { groupIssuesWithPages } from "@/lib/seo/gamify";
 import ScoreRing from "@/app/scan/score-ring";
+import ScoreInfoButton from "@/app/scan/score-info";
 
 export const metadata = { title: "Dashboard — MadRank" };
 export const dynamic = "force-dynamic";
@@ -147,8 +148,18 @@ export default async function DashboardPage() {
           <h1 className="truncate text-2xl font-bold">{siteUrl || activeSite.name}</h1>
         </div>
         <div className="flex items-center gap-4">
-          {siteScore != null && <ScoreRing score={siteScore} size={72} label="SEO" />}
-          {aiOverall != null && <ScoreRing score={aiOverall} size={72} label="AI" />}
+          {siteScore != null && (
+            <div className="flex flex-col items-center gap-0.5">
+              <ScoreRing score={siteScore} size={72} label="SEO" />
+              <ScoreInfoButton type="seo" />
+            </div>
+          )}
+          {aiOverall != null && (
+            <div className="flex flex-col items-center gap-0.5">
+              <ScoreRing score={aiOverall} size={72} label="AI" />
+              <ScoreInfoButton type="ai" />
+            </div>
+          )}
           <Link href={scanHref} className={buttonVariants()}>
             <ScanSearch /> {result ? "Re-scan" : "Run scan"}
           </Link>
