@@ -29,7 +29,7 @@ export async function saveContent({
         ${data ? JSON.stringify(data) : null}::jsonb,
         ${status}
       )
-      RETURNING id, profile_id, kind, topic, platforms, title, markdown, data, status, created_at`;
+      RETURNING id, profile_id, kind, topic, platforms, title, markdown, data, status, scheduled_for, created_at`;
     return rows[0] || null;
   } catch {
     return null;
@@ -43,21 +43,21 @@ export async function listContent(userId = null, { kind = null, limit = 30 } = {
     if (userId) {
       return kind
         ? await sql`
-            SELECT id, profile_id, kind, topic, platforms, title, markdown, data, status, created_at
+            SELECT id, profile_id, kind, topic, platforms, title, markdown, data, status, scheduled_for, created_at
             FROM generated_content WHERE user_id = ${userId} AND kind = ${kind}
             ORDER BY created_at DESC LIMIT ${limit}`
         : await sql`
-            SELECT id, profile_id, kind, topic, platforms, title, markdown, data, status, created_at
+            SELECT id, profile_id, kind, topic, platforms, title, markdown, data, status, scheduled_for, created_at
             FROM generated_content WHERE user_id = ${userId}
             ORDER BY created_at DESC LIMIT ${limit}`;
     }
     return kind
       ? await sql`
-          SELECT id, profile_id, kind, topic, platforms, title, markdown, data, status, created_at
+          SELECT id, profile_id, kind, topic, platforms, title, markdown, data, status, scheduled_for, created_at
           FROM generated_content WHERE user_id IS NULL AND kind = ${kind}
           ORDER BY created_at DESC LIMIT ${limit}`
       : await sql`
-          SELECT id, profile_id, kind, topic, platforms, title, markdown, data, status, created_at
+          SELECT id, profile_id, kind, topic, platforms, title, markdown, data, status, scheduled_for, created_at
           FROM generated_content WHERE user_id IS NULL
           ORDER BY created_at DESC LIMIT ${limit}`;
   } catch {
@@ -88,10 +88,10 @@ export async function getContent(id, userId = null) {
   try {
     const rows = userId
       ? await sql`
-          SELECT id, profile_id, kind, topic, platforms, title, markdown, data, status, created_at
+          SELECT id, profile_id, kind, topic, platforms, title, markdown, data, status, scheduled_for, created_at
           FROM generated_content WHERE id = ${id} AND user_id = ${userId} LIMIT 1`
       : await sql`
-          SELECT id, profile_id, kind, topic, platforms, title, markdown, data, status, created_at
+          SELECT id, profile_id, kind, topic, platforms, title, markdown, data, status, scheduled_for, created_at
           FROM generated_content WHERE id = ${id} AND user_id IS NULL LIMIT 1`;
     return rows[0] || null;
   } catch {
@@ -109,14 +109,54 @@ export async function updateContentStatus(id, userId, status) {
       ? await sql`
           UPDATE generated_content SET status = ${status}
           WHERE id = ${id} AND user_id = ${userId}
-          RETURNING id, profile_id, kind, topic, platforms, title, markdown, data, status, created_at`
+          RETURNING id, profile_id, kind, topic, platforms, title, markdown, data, status, scheduled_for, created_at`
       : await sql`
           UPDATE generated_content SET status = ${status}
           WHERE id = ${id} AND user_id IS NULL
-          RETURNING id, profile_id, kind, topic, platforms, title, markdown, data, status, created_at`;
+          RETURNING id, profile_id, kind, topic, platforms, title, markdown, data, status, scheduled_for, created_at`;
     return rows[0] || null;
   } catch {
     return null;
+  }
+}
+
+// Set/clear a content item's scheduled date (calendar). scheduledFor is an ISO
+// string or null (to unschedule). User-scoped.
+export async function updateContentSchedule(id, userId, scheduledFor) {
+  if (!sql || !id) return null;
+  try {
+    const rows = userId
+      ? await sql`
+          UPDATE generated_content SET scheduled_for = ${scheduledFor}
+          WHERE id = ${id} AND user_id = ${userId}
+          RETURNING id, profile_id, kind, topic, platforms, title, markdown, data, status, scheduled_for, created_at`
+      : await sql`
+          UPDATE generated_content SET scheduled_for = ${scheduledFor}
+          WHERE id = ${id} AND user_id IS NULL
+          RETURNING id, profile_id, kind, topic, platforms, title, markdown, data, status, scheduled_for, created_at`;
+    return rows[0] || null;
+  } catch {
+    return null;
+  }
+}
+
+// Content scheduled within [fromISO, toISO) — drives the calendar view.
+export async function scheduledContent(userId, fromISO, toISO) {
+  if (!sql) return [];
+  try {
+    return userId
+      ? await sql`
+          SELECT id, kind, topic, title, status, scheduled_for, created_at
+          FROM generated_content
+          WHERE user_id = ${userId} AND scheduled_for >= ${fromISO} AND scheduled_for < ${toISO}
+          ORDER BY scheduled_for ASC`
+      : await sql`
+          SELECT id, kind, topic, title, status, scheduled_for, created_at
+          FROM generated_content
+          WHERE user_id IS NULL AND scheduled_for >= ${fromISO} AND scheduled_for < ${toISO}
+          ORDER BY scheduled_for ASC`;
+  } catch {
+    return [];
   }
 }
 

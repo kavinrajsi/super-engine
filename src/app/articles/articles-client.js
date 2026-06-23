@@ -111,6 +111,22 @@ export default function ArticlesClient() {
     }
   }
 
+  async function setSchedule(id, dateStr) {
+    const scheduled_for = dateStr ? new Date(`${dateStr}T09:00:00`).toISOString() : null;
+    try {
+      const res = await fetch(`/api/content/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scheduled_for }),
+      });
+      if (res.ok) {
+        setSaved((prev) => prev.map((it) => (it.id === id ? { ...it, scheduled_for } : it)));
+      }
+    } catch {
+      /* best-effort */
+    }
+  }
+
   useEffect(() => {
     fetch("/api/profiles")
       .then((r) => r.json())
@@ -260,6 +276,14 @@ export default function ArticlesClient() {
                         </Button>
                       </>
                     )}
+                    <input
+                      type="date"
+                      aria-label="Schedule date"
+                      value={item.scheduled_for ? item.scheduled_for.slice(0, 10) : ""}
+                      onChange={(e) => setSchedule(item.id, e.target.value)}
+                      className="h-7 rounded-md border border-input bg-transparent px-2 text-xs outline-none focus-visible:border-ring"
+                      title="Schedule on the calendar"
+                    />
                     <span className="text-xs text-muted-foreground">
                       {new Date(item.created_at).toLocaleDateString()}
                     </span>

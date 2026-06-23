@@ -3,7 +3,7 @@
 
 import { currentUser } from "@/lib/auth/session";
 import { isAuthConfigured } from "@/lib/auth/google";
-import { updateContentStatus, deleteContent } from "@/lib/db/content";
+import { updateContentStatus, updateContentSchedule, deleteContent } from "@/lib/db/content";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +23,22 @@ export async function PATCH(request, { params }) {
     body = await request.json();
   } catch {
     return Response.json({ error: "Invalid JSON body." }, { status: 400 });
+  }
+
+  // Scheduling update (calendar): scheduled_for is an ISO date string or null.
+  if ("scheduled_for" in (body || {})) {
+    const raw = body.scheduled_for;
+    let scheduledFor = null;
+    if (raw != null) {
+      const d = new Date(raw);
+      if (Number.isNaN(d.getTime())) {
+        return Response.json({ error: "scheduled_for must be a valid date or null." }, { status: 400 });
+      }
+      scheduledFor = d.toISOString();
+    }
+    const item = await updateContentSchedule(id, userId, scheduledFor);
+    if (!item) return Response.json({ error: "Not found." }, { status: 404 });
+    return Response.json({ item });
   }
 
   const status = body?.status;
