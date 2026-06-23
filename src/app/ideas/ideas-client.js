@@ -69,14 +69,14 @@ export default function IdeasClient() {
     load();
   }, []);
 
-  async function generate() {
+  async function generate(source) {
     setState("loading");
     setError(null);
     try {
       const res = await fetch("/api/ideas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
+        body: JSON.stringify(source ? { source } : {}),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Generation failed");
@@ -107,10 +107,20 @@ export default function IdeasClient() {
               </>
             )}
           </div>
-          <Button onClick={generate} disabled={state === "loading" || !activeSite?.website_url}>
-            <Sparkles />
-            {state === "loading" ? "Scanning…" : "Generate now"}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              onClick={() => generate("gap")}
+              disabled={state === "loading" || !activeSite?.website_url}
+              title="Ideas from keywords competitors rank for that you don't (needs DataForSEO)"
+            >
+              From competitor gaps
+            </Button>
+            <Button onClick={() => generate()} disabled={state === "loading" || !activeSite?.website_url}>
+              <Sparkles />
+              {state === "loading" ? "Scanning…" : "Generate now"}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

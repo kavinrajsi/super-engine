@@ -31,6 +31,7 @@ export async function generateIdeas({
   siteUrl = "",
   headlines = [],
   gscQueries = [],
+  gapKeywords = [],
   count = 5,
   model,
 }) {
@@ -49,6 +50,13 @@ export async function generateIdeas({
         .join("\n")}`
     : "";
 
+  const gapBlock = gapKeywords.length
+    ? `\n\nTopics competitors rank for that this site does NOT (content gaps — prioritize these):\n${gapKeywords
+        .slice(0, 20)
+        .map((k) => `- ${typeof k === "string" ? k : k.keyword}`)
+        .join("\n")}`
+    : "";
+
   const { output } = await generateText({
     model: model || DEFAULT_MODEL,
     output: Output.object({ schema: IdeasSchema }),
@@ -60,7 +68,7 @@ export async function generateIdeas({
     prompt:
       `BRAND MEMORY (voice, audience, products, positioning):\n"""\n${brandContext}\n"""\n\n` +
       `Site: ${siteUrl || "(unknown)"}\n\n` +
-      `TODAY'S RELEVANT HEADLINES:\n${newsBlock}${demandBlock}\n\n` +
+      `TODAY'S RELEVANT HEADLINES:\n${newsBlock}${demandBlock}${gapBlock}\n\n` +
       `Propose ${count} distinct post ideas this brand could publish today. Prefer ideas that ` +
       `ride a current headline above; keep each tightly relevant to the brand and its audience.`,
   });

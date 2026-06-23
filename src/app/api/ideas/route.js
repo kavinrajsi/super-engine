@@ -8,6 +8,8 @@ import { isAuthConfigured } from "@/lib/auth/google";
 import { getProfile, getActiveProfile } from "@/lib/db/profiles";
 import { listContent, saveContent } from "@/lib/db/content";
 import { ideaKeywords, fetchNews } from "@/lib/seo/news";
+import { discoverCompetitors } from "@/lib/seo/competitors";
+import { fetchContentGap } from "@/lib/seo/content-gap";
 import { generateIdeas } from "@/lib/ai/generate-ideas";
 import { userModel } from "@/lib/ai/user-model";
 import { aiErrorMessage } from "@/lib/ai/errors";
@@ -94,12 +96,25 @@ export async function POST(request) {
   const keywords = ideaKeywords(profile);
   const [headlines, gscQueries] = await Promise.all([fetchNews(keywords), gscQueriesFor(host)]);
 
+  // Optional: seed from competitor content gaps (paid DataForSEO; best-effort).
+  let gapKeywords = [];
+  if (body?.source === "gap" && host) {
+    try {
+      const disc = await discoverCompetitors(host, { keywords });
+      const competitorDomains = (disc?.competitors || []).map((c) => c.domain).filter(Boolean);
+      gapKeywords = (await fetchContentGap(host, competitorDomains)).map((g) => g.keyword);
+    } catch {
+      /* best-effort — fall back to news/brand only */
+    }
+  }
+
   try {
     const result = await generateIdeas({
       profileMarkdown: profile.markdown,
       siteUrl: profile.website_url,
       headlines,
       gscQueries,
+      gapKeywords,
       model: await userModel(userId),
     });
     const saved = await saveContent({
@@ -107,7 +122,12 @@ export async function POST(request) {
       profileId: profile.id,
       kind: "idea",
       topic: host || profile.name,
-      data: { ideas: result.ideas, headlines, gscUsed: gscQueries.length > 0 },
+      data: {
+        ideas: result.ideas,
+        headlines,
+        gscUsed: gscQueries.length > 0,
+        gapUsed: gapKeywords.length > 0,
+      },
     });
     return Response.json({ item: saved, result });
   } catch (err) {
