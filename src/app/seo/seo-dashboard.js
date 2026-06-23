@@ -182,7 +182,7 @@ export default function SeoDashboard({ email, connected = false, initialUrl = ""
           <TabsTrigger value="pages">Pages</TabsTrigger>
           <TabsTrigger value="links">Links</TabsTrigger>
           <TabsTrigger value="technical">Technical</TabsTrigger>
-          <TabsTrigger value="geo">GEO</TabsTrigger>
+          <TabsTrigger value="geo">AI Search</TabsTrigger>
           <TabsTrigger value="tracking">Tracking</TabsTrigger>
         </TabsList>
       </div>
