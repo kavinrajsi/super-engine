@@ -115,7 +115,7 @@ export default function ScanDashboard({ result, exportHref, reportHref, shareTok
           {active === "overview" && <OverviewPanel result={result} onSelect={setActive} />}
           {active === "pages" && <PagesPanel result={result} />}
           {active === "issues" && <IssuesPanel result={result} />}
-          {active === "ai" && <AiReadinessPanel readiness={result.aiReadiness} />}
+          {active === "ai" && <AiReadinessPanel readiness={result.aiReadiness} url={result.rootUrl} />}
           {active === "performance" && <PerformancePanel url={result.rootUrl} />}
           {active === "tracking" && <TrackingPanel analytics={result.analytics} />}
         </main>

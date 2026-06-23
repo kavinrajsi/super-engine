@@ -6,6 +6,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import ScoreRing from "./score-ring";
 
 const LENSES = [
@@ -57,7 +58,7 @@ function FileStatus({ label, info }) {
   );
 }
 
-export default function AiReadinessPanel({ readiness }) {
+export default function AiReadinessPanel({ readiness, url }) {
   if (!readiness) return null;
   const { overall, layers, site } = readiness;
   const blocked = site?.botsBlocked || [];
@@ -110,6 +111,39 @@ export default function AiReadinessPanel({ readiness }) {
           </div>
         </CardContent>
       </Card>
+
+      {url && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Generators</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Download ready-to-use files generated from this site&rsquo;s scan.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <a
+                href={`/api/seo/generate?url=${encodeURIComponent(url)}&kind=llms`}
+                className={buttonVariants({ variant: "outline", size: "sm" })}
+              >
+                llms.txt
+              </a>
+              <a
+                href={`/api/seo/generate?url=${encodeURIComponent(url)}&kind=robots`}
+                className={buttonVariants({ variant: "outline", size: "sm" })}
+              >
+                robots.txt
+              </a>
+              <a
+                href={`/api/seo/generate?url=${encodeURIComponent(url)}&kind=jsonld`}
+                className={buttonVariants({ variant: "outline", size: "sm" })}
+              >
+                JSON-LD
+              </a>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

@@ -11,7 +11,7 @@ export default function GeoTab() {
   const { scan } = useScan() || {};
   return (
     <ScanGate>
-      <AiReadinessPanel readiness={scan?.aiReadiness} />
+      <AiReadinessPanel readiness={scan?.aiReadiness} url={scan?.rootUrl} />
     </ScanGate>
   );
 }
