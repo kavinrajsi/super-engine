@@ -6,6 +6,7 @@
 
 import { assertSafeUrl } from "@/lib/seo/safe-fetch";
 import { runScan } from "@/lib/seo/analyze";
+import { rateLimitResponse } from "@/lib/rate-limit";
 
 function csvEscape(value) {
   if (value == null) return "";
@@ -53,6 +54,10 @@ export async function GET(request) {
   } catch (err) {
     return Response.json({ error: err.message }, { status: 400 });
   }
+
+  // Public + re-runs a full scan → throttle to prevent unauthenticated abuse.
+  const limited = await rateLimitResponse(request, "export", { limit: 20, windowSec: 600 });
+  if (limited) return limited;
 
   let result;
   try {
