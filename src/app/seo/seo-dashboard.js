@@ -175,15 +175,17 @@ export default function SeoDashboard({ email, connected = false, initialUrl = ""
 
   return (
     <Tabs value={tab} onValueChange={setTab} className="w-full">
-      <TabsList>
-        <TabsTrigger value="traffic">Traffic</TabsTrigger>
-        <TabsTrigger value="seo">SEO</TabsTrigger>
-        <TabsTrigger value="pages">Pages</TabsTrigger>
-        <TabsTrigger value="links">Links</TabsTrigger>
-        <TabsTrigger value="technical">Technical</TabsTrigger>
-        <TabsTrigger value="geo">GEO</TabsTrigger>
-        <TabsTrigger value="tracking">Tracking</TabsTrigger>
-      </TabsList>
+      <div className="-mx-4 overflow-x-auto px-4 scrollbar-none md:mx-0 md:px-0">
+        <TabsList>
+          <TabsTrigger value="traffic">Traffic</TabsTrigger>
+          <TabsTrigger value="seo">SEO</TabsTrigger>
+          <TabsTrigger value="pages">Pages</TabsTrigger>
+          <TabsTrigger value="links">Links</TabsTrigger>
+          <TabsTrigger value="technical">Technical</TabsTrigger>
+          <TabsTrigger value="geo">GEO</TabsTrigger>
+          <TabsTrigger value="tracking">Tracking</TabsTrigger>
+        </TabsList>
+      </div>
 
       {/* Audit bar — type any URL, optionally deep-scan, and run. */}
       {showAuditTools && (
@@ -199,7 +201,7 @@ export default function SeoDashboard({ email, connected = false, initialUrl = ""
               aria-label="Site URL to audit"
               inputMode="url"
               aria-invalid={status === "error" || undefined}
-              className="h-9 min-w-[12rem] flex-1 font-mono text-sm"
+              className="h-11 min-w-[12rem] flex-1 font-mono text-sm md:h-9"
             />
             <Label className="flex cursor-pointer items-center gap-2 text-sm font-normal text-muted-foreground">
               <Checkbox checked={deep} onCheckedChange={(v) => setDeep(!!v)} />

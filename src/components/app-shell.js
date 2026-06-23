@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import UserMenu from "@/components/user-menu";
 import AppNavSidebar from "@/components/app-nav-sidebar";
 import SiteFooter from "@/components/site-footer";
+import MobileBottomNav from "@/components/mobile-bottom-nav";
 
 export default function AppShell({ children, title }) {
   return (
@@ -29,7 +30,8 @@ export default function AppShell({ children, title }) {
             <UserMenu />
           </div>
         </header>
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 pb-16 md:pb-0">{children}</main>
+        <MobileBottomNav />
         <SiteFooter />
       </SidebarInset>
     </SidebarProvider>

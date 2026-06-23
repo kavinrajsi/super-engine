@@ -33,7 +33,7 @@ export const dynamic = "force-dynamic";
 function Shell({ children }) {
   return (
     <AppShell title="Dashboard">
-      <div className="mx-auto max-w-5xl space-y-6 p-6">{children}</div>
+      <div className="mx-auto max-w-5xl space-y-6 px-4 py-4 md:p-6">{children}</div>
     </AppShell>
   );
 }

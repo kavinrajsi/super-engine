@@ -63,9 +63,9 @@ export default async function SeoPage({ searchParams }) {
   // not linked. So always render the dashboard and pass the connection state.
   return (
     <AppShell>
-      <div className="mx-auto max-w-5xl space-y-4 p-6">
+      <div className="mx-auto max-w-5xl space-y-4 px-4 py-4 md:p-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">SEO insights</h1>
+          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">SEO insights</h1>
           <p className="text-muted-foreground">
             Audit any site across SEO, pages, links, technical, GEO and tracking — and connect
             Google to add your Analytics traffic and Search Console data.
