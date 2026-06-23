@@ -30,6 +30,8 @@ import {
   FileText,
   Lightbulb,
   Newspaper,
+  CalendarDays,
+  MessageSquare,
   Settings2,
   CircleUser,
 } from "lucide-react";
@@ -43,7 +45,10 @@ function buildGroups(scanHref) {
   return [
     {
       label: "Start",
-      links: [{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboard }],
+      links: [
+        { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+        { href: "/ask", label: "Ask", icon: MessageSquare },
+      ],
     },
     {
       label: "SEO & Search",
@@ -63,6 +68,7 @@ function buildGroups(scanHref) {
         { href: "/ideas", label: "Ideas", icon: Newspaper },
         { href: "/articles", label: "Articles", icon: FileText },
         { href: "/post-ideas", label: "Post Ideas", icon: Lightbulb },
+        { href: "/calendar", label: "Calendar", icon: CalendarDays },
       ],
     },
     {
