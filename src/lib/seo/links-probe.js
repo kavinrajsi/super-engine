@@ -10,7 +10,7 @@
 import { assertSafeUrl } from "./safe-fetch";
 
 const USER_AGENT =
-  "MetaTagSEOBot/0.1 (+https://example.com/bot; on-page SEO audit)";
+  "MadRankBot/1.0 (+https://superengine.vercel.app/bot; on-page SEO audit)";
 const MAX_HOPS = 5;
 
 async function requestOnce(url, method, timeoutMs) {
