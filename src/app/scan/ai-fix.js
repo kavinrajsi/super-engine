@@ -8,6 +8,7 @@ import { usePostHog } from "posthog-js/react";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { buildHeadBlock } from "@/lib/seo/head-from-fixes";
 
 export default function AiFix({ page }) {
   const ph = usePostHog();
@@ -51,6 +52,25 @@ export default function AiFix({ page }) {
     setTimeout(() => setCopied(-1), 1200);
   }
 
+  function headBlock() {
+    return buildHeadBlock(data?.suggestions || [], page.signals || {});
+  }
+
+  function downloadHead() {
+    const blob = new Blob([headBlock()], { type: "text/html" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    let host = "page";
+    try {
+      host = new URL(page.url).hostname;
+    } catch {
+      /* keep default */
+    }
+    a.download = `${host}-head.html`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
   return (
     <div className="mt-3">
       {state !== "done" && (
@@ -89,9 +109,17 @@ export default function AiFix({ page }) {
               </li>
             ))}
           </ul>
-          <Button variant="ghost" size="xs" onClick={run}>
-            ↻ Regenerate
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" size="xs" onClick={() => copy(headBlock(), -2)}>
+              {copied === -2 ? "Copied!" : "Copy corrected <head>"}
+            </Button>
+            <Button variant="outline" size="xs" onClick={downloadHead}>
+              Download .html
+            </Button>
+            <Button variant="ghost" size="xs" onClick={run}>
+              ↻ Regenerate
+            </Button>
+          </div>
         </div>
       )}
     </div>
