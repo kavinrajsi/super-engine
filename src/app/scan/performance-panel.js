@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Gauge } from "lucide-react";
 import ScoreRing from "./score-ring";
+import ScoreInfoButton from "./score-info";
 
 const RATING_COLOR = {
   good: "var(--pass)",
@@ -70,24 +71,27 @@ export default function PerformancePanel({ url }) {
           <CardDescription>
             Google PageSpeed Insights — Lighthouse + Core Web Vitals
           </CardDescription>
-          {state !== "idle" && (
-            <CardAction>
-              <div className="inline-flex rounded-md border p-0.5 text-xs">
-                {["mobile", "desktop"].map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => run(s)}
-                    disabled={state === "loading"}
-                    className={`rounded px-2.5 py-1 capitalize ${
-                      strategy === s ? "bg-primary text-primary-foreground" : ""
-                    }`}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </CardAction>
-          )}
+          <CardAction>
+            <div className="flex items-center gap-1">
+              <ScoreInfoButton type="performance" />
+              {state !== "idle" && (
+                <div className="inline-flex rounded-md border p-0.5 text-xs">
+                  {["mobile", "desktop"].map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => run(s)}
+                      disabled={state === "loading"}
+                      className={`rounded px-2.5 py-1 capitalize ${
+                        strategy === s ? "bg-primary text-primary-foreground" : ""
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </CardAction>
         </CardHeader>
         <CardContent>
           {state === "idle" && (

@@ -3,11 +3,12 @@
 // AI Readiness: overall score + four lens bars (AEO/GEO/AIO/AGO), llms.txt /
 // llms-full.txt / ai.txt validation, and AI-crawler access.
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import ScoreRing from "./score-ring";
+import ScoreInfoButton from "./score-info";
 
 const LENSES = [
   { key: "aeo", name: "AEO", full: "Answer Engine — be the direct answer" },
@@ -68,6 +69,9 @@ export default function AiReadinessPanel({ readiness, url }) {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">AI search readiness</CardTitle>
+          <CardAction>
+            <ScoreInfoButton type="ai" />
+          </CardAction>
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-6 sm:flex-row">
           <ScoreRing score={overall ?? 0} size={120} label="Overall" />

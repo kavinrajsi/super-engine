@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { questsFromIssues } from "@/lib/seo/gamify";
 import ScoreRing from "./score-ring";
 import SnapshotCards from "./snapshot-cards";
+import ScoreInfoButton from "./score-info";
 
 const SEV_BADGE = { error: "destructive", warning: "secondary", info: "outline" };
 
@@ -81,9 +82,12 @@ export default function OverviewPanel({ result, onSelect }) {
           <CardTitle className="text-base">AI search readiness</CardTitle>
           <CardDescription>How well this site works for AI answer engines</CardDescription>
           <CardAction>
-            <Button variant="outline" size="sm" onClick={() => onSelect("ai")}>
-              View AI details
-            </Button>
+            <div className="flex items-center gap-1">
+              <ScoreInfoButton type="ai" />
+              <Button variant="outline" size="sm" onClick={() => onSelect("ai")}>
+                View AI details
+              </Button>
+            </div>
           </CardAction>
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-6 sm:flex-row">
@@ -110,6 +114,9 @@ export default function OverviewPanel({ result, onSelect }) {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">SEO health</CardTitle>
+          <CardAction>
+            <ScoreInfoButton type="seo" />
+          </CardAction>
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-6 sm:flex-row">
           <ScoreRing

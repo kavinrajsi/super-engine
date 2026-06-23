@@ -7,14 +7,18 @@
 import { Card, CardContent } from "@/components/ui/card";
 import OverviewPanel from "@/app/scan/overview-panel";
 import IssuesPanel from "@/app/scan/issues-panel";
+import ScoreInfoButton from "@/app/scan/score-info";
 import ScanGate from "./scan-gate";
 import { useScan } from "./scan-context";
 
-function StatCard({ label, value, hint }) {
+function StatCard({ label, value, hint, info }) {
   return (
     <Card>
       <CardContent className="py-4">
-        <div className="text-xs text-muted-foreground">{label}</div>
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          {label}
+          {info}
+        </div>
         <div className="mt-1 text-2xl font-bold">{value ?? "—"}</div>
         {hint && <div className="mt-0.5 text-xs text-muted-foreground">{hint}</div>}
       </CardContent>
@@ -32,7 +36,11 @@ export default function SeoTab() {
     <ScanGate>
       <div className="space-y-6">
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <StatCard label="Site score" value={scan?.siteScore != null ? `${scan.siteScore}` : "—"} />
+          <StatCard
+            label="Site score"
+            value={scan?.siteScore != null ? `${scan.siteScore}` : "—"}
+            info={<ScoreInfoButton type="seo" />}
+          />
           <StatCard
             label="Readability"
             value={cs?.readabilityGrade || "—"}
