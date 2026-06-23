@@ -44,6 +44,74 @@ const CONTENT = {
       },
     ],
   },
+  aeo: {
+    title: "AEO — Answer Engine Optimization",
+    sections: [
+      {
+        heading: "What it measures",
+        body: "How well your content is structured to become the direct answer in AI assistants like ChatGPT and Perplexity.",
+      },
+      {
+        heading: "Checks",
+        body: "FAQ/Q&A structured data (JSON-LD) · Question-style H2/H3 headings",
+      },
+      {
+        heading: "Penalty scale",
+        body: "Missing FAQ schema −22 pts · No question headings −10 pts",
+      },
+    ],
+  },
+  geo: {
+    title: "GEO — Generative Engine Optimization",
+    sections: [
+      {
+        heading: "What it measures",
+        body: "How citable and trustworthy your content is for AI engines that generate long-form answers.",
+      },
+      {
+        heading: "Checks",
+        body: "Author attribution · Published/modified dates · Content depth ≥ 300 words · Lists or tables present",
+      },
+      {
+        heading: "Penalty scale",
+        body: "Missing author −22 pts · Each missing signal −10 pts",
+      },
+    ],
+  },
+  aio: {
+    title: "AIO — AI Overviews Optimization",
+    sections: [
+      {
+        heading: "What it measures",
+        body: "How machine-readable your page is for Google's AI Overviews feature.",
+      },
+      {
+        heading: "Checks",
+        body: "JSON-LD structured data · Meta description · Semantic <main>/<article> landmark · dateModified freshness signal",
+      },
+      {
+        heading: "Penalty scale",
+        body: "Missing structured data −22 pts · Each missing signal −10 pts",
+      },
+    ],
+  },
+  ago: {
+    title: "AGO — Agent & Bot Access",
+    sections: [
+      {
+        heading: "What it measures",
+        body: "How accessible your site is to AI crawlers — covering crawlability, bot policy, and AI guidance files.",
+      },
+      {
+        heading: "Checks",
+        body: "JS-rendered content (page-level) · /llms.txt and /llms-full.txt present and valid · AI bots not blocked in robots.txt",
+      },
+      {
+        heading: "Penalty scale",
+        body: "JS-rendered or blocked bots −22 pts · Missing llms.txt −10 pts · Malformed file −22 pts",
+      },
+    ],
+  },
   performance: {
     title: "PageSpeed score",
     sections: [

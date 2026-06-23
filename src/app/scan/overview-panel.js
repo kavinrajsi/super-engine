@@ -101,8 +101,9 @@ export default function OverviewPanel({ result, onSelect }) {
                 >
                   {ai?.layers?.[l.key] ?? "—"}
                 </div>
-                <div className="text-xs uppercase tracking-wide text-muted-foreground">
+                <div className="flex items-center justify-center gap-0.5 text-xs uppercase tracking-wide text-muted-foreground">
                   {l.label}
+                  <ScoreInfoButton type={l.key} />
                 </div>
               </div>
             ))}

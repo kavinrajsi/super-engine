@@ -79,7 +79,10 @@ export default function AiReadinessPanel({ readiness, url }) {
             {LENSES.map((l) => (
               <div key={l.key}>
                 <div className="mb-1 flex items-center justify-between text-sm">
-                  <span className="font-medium">{l.name}</span>
+                  <span className="flex items-center gap-1 font-medium">
+                    {l.name}
+                    <ScoreInfoButton type={l.key} />
+                  </span>
                   <span className="tabular-nums text-muted-foreground">{layers?.[l.key] ?? "—"}</span>
                 </div>
                 <Progress value={layers?.[l.key] ?? 0} />
