@@ -6,12 +6,12 @@ const API_BASE = "https://api.cloudflare.com/client/v4";
 const GRAPHQL = `${API_BASE}/graphql`;
 
 // YYYY-MM-DD for `daysAgo` days back (0 = today), UTC.
-function ymd(daysAgo) {
+function daysAgoIso(daysAgo) {
   const d = new Date(Date.now() - daysAgo * 86400000);
   return d.toISOString().slice(0, 10);
 }
 
-async function cfRest(token, path) {
+async function cloudflareRest(token, path) {
   const res = await fetch(`${API_BASE}${path}`, {
     headers: { Authorization: `Bearer ${token}` },
     signal: AbortSignal.timeout(20_000),
@@ -19,7 +19,7 @@ async function cfRest(token, path) {
   return res.json().catch(() => ({ success: false }));
 }
 
-async function cfGraphQL(token, query, variables) {
+async function cloudflareGraphQL(token, query, variables) {
   const res = await fetch(GRAPHQL, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -34,7 +34,7 @@ async function cfGraphQL(token, query, variables) {
 // Is the token valid + active? (GET /user/tokens/verify)
 export async function verifyToken(token) {
   try {
-    const json = await cfRest(token, "/user/tokens/verify");
+    const json = await cloudflareRest(token, "/user/tokens/verify");
     return !!json?.success && json?.result?.status === "active";
   } catch {
     return false;
@@ -45,7 +45,7 @@ export async function verifyToken(token) {
 export async function findZone(token, domain) {
   if (!domain) return null;
   try {
-    const json = await cfRest(token, `/zones?name=${encodeURIComponent(domain)}&status=active`);
+    const json = await cloudflareRest(token, `/zones?name=${encodeURIComponent(domain)}&status=active`);
     const z = json?.result?.[0];
     return z ? { id: z.id, name: z.name } : null;
   } catch {
@@ -64,7 +64,7 @@ async function webAnalytics(token, zoneTag, days) {
       }
     }}
   }`;
-  const data = await cfGraphQL(token, query, { zoneTag, start: ymd(days), end: ymd(0) });
+  const data = await cloudflareGraphQL(token, query, { zoneTag, start: daysAgoIso(days), end: daysAgoIso(0) });
   const groups = data?.viewer?.zones?.[0]?.rumPageloadEventsAdaptiveGroups || [];
   const trend = groups.map((g) => ({
     date: g.dimensions.date,
@@ -91,7 +91,7 @@ async function zoneHttp(token, zoneTag, days) {
       }
     }}
   }`;
-  const data = await cfGraphQL(token, query, { zoneTag, start: ymd(days), end: ymd(0) });
+  const data = await cloudflareGraphQL(token, query, { zoneTag, start: daysAgoIso(days), end: daysAgoIso(0) });
   const groups = data?.viewer?.zones?.[0]?.httpRequests1dGroups || [];
   const trend = groups.map((g) => ({
     date: g.dimensions.date,

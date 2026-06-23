@@ -10,7 +10,7 @@
 // creds) and implement/enable its branch in fetchBacklinks. A DataForSEO
 // reference impl is included but inactive until DATAFORSEO_LOGIN/PASSWORD exist.
 
-import { dfsPost, domainOf, num } from "./dataforseo";
+import { dataForSeoPost, domainOf, toNumber } from "./dataforseo";
 
 export { domainOf }; // re-export for existing importers
 
@@ -40,8 +40,8 @@ function emptySummary() {
 async function fetchDataForSeo(domain) {
   // Headline summary + a short referring-domains list, in parallel.
   const [summary, refDomains] = await Promise.all([
-    dfsPost("/backlinks/summary/live", { target: domain, internal_list_limit: 0, backlinks_status_type: "live" }),
-    dfsPost("/backlinks/referring_domains/live", {
+    dataForSeoPost("/backlinks/summary/live", { target: domain, internal_list_limit: 0, backlinks_status_type: "live" }),
+    dataForSeoPost("/backlinks/referring_domains/live", {
       target: domain,
       limit: 10,
       order_by: ["rank,desc"],
@@ -51,18 +51,18 @@ async function fetchDataForSeo(domain) {
 
   const attrs = summary?.referring_links_attributes || {};
   const data = {
-    referringDomains: num(summary?.referring_domains),
-    backlinks: num(summary?.backlinks),
-    dofollow: num(attrs.dofollow ?? summary?.referring_domains_nofollow != null
-      ? num(summary?.referring_domains) - num(summary?.referring_domains_nofollow)
+    referringDomains: toNumber(summary?.referring_domains),
+    backlinks: toNumber(summary?.backlinks),
+    dofollow: toNumber(attrs.dofollow ?? summary?.referring_domains_nofollow != null
+      ? toNumber(summary?.referring_domains) - toNumber(summary?.referring_domains_nofollow)
       : null),
-    nofollow: num(attrs.nofollow ?? summary?.referring_domains_nofollow),
-    domainRating: num(summary?.rank),
-    rank: num(summary?.rank),
+    nofollow: toNumber(attrs.nofollow ?? summary?.referring_domains_nofollow),
+    domainRating: toNumber(summary?.rank),
+    rank: toNumber(summary?.rank),
   };
 
   const topReferrers = (refDomains?.items || [])
-    .map((it) => ({ domain: it.domain, backlinks: num(it.backlinks), rank: num(it.rank) }))
+    .map((it) => ({ domain: it.domain, backlinks: toNumber(it.backlinks), rank: toNumber(it.rank) }))
     .filter((r) => r.domain);
 
   return { ...data, topReferrers };

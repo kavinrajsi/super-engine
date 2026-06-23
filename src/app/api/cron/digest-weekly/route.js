@@ -24,7 +24,7 @@ export const maxDuration = 300;
 
 const BATCH = 50;
 
-function safeEq(a, b) {
+function secretsMatch(a, b) {
   const A = Buffer.from(a || "", "utf8");
   const B = Buffer.from(b || "", "utf8");
   return A.length === B.length && timingSafeEqual(A, B);
@@ -34,9 +34,9 @@ function authorized(request) {
   if (!secret) return false;
   const header = request.headers.get("authorization") || "";
   const qp = new URL(request.url).searchParams.get("secret") || "";
-  return safeEq(header, `Bearer ${secret}`) || safeEq(qp, secret);
+  return secretsMatch(header, `Bearer ${secret}`) || secretsMatch(qp, secret);
 }
-function esc(s) {
+function escapeHtml(s) {
   return String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
 }
 
@@ -120,7 +120,7 @@ export async function GET(request) {
     lines.push("", `${origin}/dashboard`);
 
     const html =
-      `<h2>Weekly performance — ${esc(r.website_url)}</h2><ul>` +
+      `<h2>Weekly performance — ${escapeHtml(r.website_url)}</h2><ul>` +
       (score != null ? `<li>SEO score: <b>${score}/100</b></li>` : "") +
       (gsc ? `<li>Search Console (7d): ${Math.round(gsc.clicks)} clicks, ${Math.round(gsc.impressions)} impressions</li>` : "") +
       (cf?.zoneFound
@@ -129,7 +129,7 @@ export async function GET(request) {
       `</ul>` +
       (movers.length
         ? `<p><b>Rank movers</b></p><ul>${movers
-            .map((m) => `<li>${esc(m.keyword)}: #${m.latest} (${m.delta > 0 ? `▲${m.delta}` : `▼${-m.delta}`})</li>`)
+            .map((m) => `<li>${escapeHtml(m.keyword)}: #${m.latest} (${m.delta > 0 ? `▲${m.delta}` : `▼${-m.delta}`})</li>`)
             .join("")}</ul>`
         : "") +
       `<p><a href="${origin}/dashboard">Open dashboard →</a></p>`;

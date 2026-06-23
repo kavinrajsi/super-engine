@@ -20,13 +20,13 @@ export function domainOf(input) {
 }
 
 // Coerce to a number or null.
-export function num(v) {
+export function toNumber(v) {
   return v == null ? null : Number(v);
 }
 
 // POST one task to a DataForSEO endpoint with Basic auth. Returns the first
 // task's `result[0]` (or null). Throws on transport / API error.
-export async function dfsPost(path, task) {
+export async function dataForSeoPost(path, task) {
   const auth = Buffer.from(
     `${process.env.DATAFORSEO_LOGIN}:${process.env.DATAFORSEO_PASSWORD}`
   ).toString("base64");

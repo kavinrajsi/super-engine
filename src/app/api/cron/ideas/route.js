@@ -15,7 +15,7 @@ export const maxDuration = 300;
 
 const BATCH = 10; // sites per invocation (cron timeout guard)
 
-function safeEq(a, b) {
+function secretsMatch(a, b) {
   const A = Buffer.from(a || "", "utf8");
   const B = Buffer.from(b || "", "utf8");
   return A.length === B.length && timingSafeEqual(A, B);
@@ -26,7 +26,7 @@ function authorized(request) {
   if (!secret) return false;
   const header = request.headers.get("authorization") || "";
   const qp = new URL(request.url).searchParams.get("secret") || "";
-  return safeEq(header, `Bearer ${secret}`) || safeEq(qp, secret);
+  return secretsMatch(header, `Bearer ${secret}`) || secretsMatch(qp, secret);
 }
 
 export async function GET(request) {

@@ -4,7 +4,7 @@
 // other become guidance comments. A suggested value already containing markup is
 // used as-is (so the model returning a full tag doesn't get double-wrapped).
 
-function esc(s) {
+function escapeHtml(s) {
   return String(s)
     .replace(/&/g, "&amp;")
     .replace(/"/g, "&quot;")
@@ -25,13 +25,13 @@ export function buildHeadBlock(suggestions = [], signals = {}) {
     lines.push(isMarkup(v) ? v.trim() : render(v));
   };
 
-  tag("title", signals.title, (v) => `<title>${esc(v)}</title>`);
-  tag("metaDescription", signals.metaDescription, (v) => `<meta name="description" content="${esc(v)}" />`);
-  if (signals.canonical) lines.push(`<link rel="canonical" href="${esc(signals.canonical)}" />`);
-  tag("ogTitle", signals.og?.title ?? pick("title", signals.title), (v) => `<meta property="og:title" content="${esc(v)}" />`);
-  tag("ogDescription", signals.og?.description ?? pick("metaDescription", signals.metaDescription), (v) => `<meta property="og:description" content="${esc(v)}" />`);
-  if (signals.og?.image) lines.push(`<meta property="og:image" content="${esc(signals.og.image)}" />`);
-  tag("twitterCard", signals.twitter?.card || "summary_large_image", (v) => `<meta name="twitter:card" content="${esc(v)}" />`);
+  tag("title", signals.title, (v) => `<title>${escapeHtml(v)}</title>`);
+  tag("metaDescription", signals.metaDescription, (v) => `<meta name="description" content="${escapeHtml(v)}" />`);
+  if (signals.canonical) lines.push(`<link rel="canonical" href="${escapeHtml(signals.canonical)}" />`);
+  tag("ogTitle", signals.og?.title ?? pick("title", signals.title), (v) => `<meta property="og:title" content="${escapeHtml(v)}" />`);
+  tag("ogDescription", signals.og?.description ?? pick("metaDescription", signals.metaDescription), (v) => `<meta property="og:description" content="${escapeHtml(v)}" />`);
+  if (signals.og?.image) lines.push(`<meta property="og:image" content="${escapeHtml(signals.og.image)}" />`);
+  tag("twitterCard", signals.twitter?.card || "summary_large_image", (v) => `<meta name="twitter:card" content="${escapeHtml(v)}" />`);
 
   // JSON-LD / FAQ schema suggestions are already <script> snippets.
   for (const field of ["jsonLd", "faqSchema"]) {

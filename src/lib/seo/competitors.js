@@ -9,7 +9,7 @@
 
 import { generateText, Output } from "ai";
 import { z } from "zod";
-import { dfsPost, isDataForSeoConfigured, domainOf } from "./dataforseo";
+import { dataForSeoPost, isDataForSeoConfigured, domainOf } from "./dataforseo";
 
 // Same model the rest of the app uses via the gateway (see suggest-fixes.js).
 const MODEL = "anthropic/claude-haiku-4.5";
@@ -30,7 +30,7 @@ function validHost(h) {
 }
 
 async function dfsCompetitors(domain) {
-  const result = await dfsPost("/dataforseo_labs/google/competitors_domain/live", {
+  const result = await dataForSeoPost("/dataforseo_labs/google/competitors_domain/live", {
     target: domain,
     location_code: 2840, // United States
     language_code: "en",

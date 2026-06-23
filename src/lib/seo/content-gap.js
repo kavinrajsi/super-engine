@@ -2,10 +2,10 @@
 // fuel for differentiated content ideas. Uses DataForSEO Labs ranked_keywords
 // (paid). Best-effort: returns [] without creds or on error.
 
-import { dfsPost, isDataForSeoConfigured } from "./dataforseo";
+import { dataForSeoPost, isDataForSeoConfigured } from "./dataforseo";
 
 async function rankedKeywords(domain, limit = 100) {
-  const r = await dfsPost("/dataforseo_labs/google/ranked_keywords/live", {
+  const r = await dataForSeoPost("/dataforseo_labs/google/ranked_keywords/live", {
     target: domain,
     location_code: 2840, // United States
     language_code: "en",

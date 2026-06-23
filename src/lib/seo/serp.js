@@ -6,7 +6,7 @@
 // no-ops to { configured:false } until creds are set, so the UI shows a "connect
 // a provider" card rather than failing.
 
-import { domainOf, dfsPost } from "./dataforseo";
+import { domainOf, dataForSeoPost } from "./dataforseo";
 import { candidateKeywords } from "./keywords";
 
 // DataForSEO Google organic SERP defaults (US / English).
@@ -39,7 +39,7 @@ async function fetchDataForSeo(domain, keywords) {
   return Promise.all(
     keywords.map(async (keyword) => {
       try {
-        const result = await dfsPost("/serp/google/organic/live/advanced", {
+        const result = await dataForSeoPost("/serp/google/organic/live/advanced", {
           keyword,
           location_code: SERP_LOCATION_CODE,
           language_code: SERP_LANGUAGE_CODE,
