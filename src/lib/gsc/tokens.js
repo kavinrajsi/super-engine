@@ -63,6 +63,32 @@ export async function saveTokens(sessionId, tokens, email) {
   return true;
 }
 
+// Associate a GSC session with the signed-in app user, so background jobs can
+// later find this user's token by user_id. Called from the OAuth callback when
+// a user is logged in (GSC connect itself isn't login-gated).
+export async function setTokenUser(sessionId, userId) {
+  if (!sql || !sessionId || userId == null) return;
+  try {
+    await sql`UPDATE gsc_tokens SET user_id = ${userId} WHERE session_id = ${sessionId}`;
+  } catch {
+    /* best-effort */
+  }
+}
+
+// Live access token for a user (newest linked session) — for crons with no
+// cookie. Returns null when the user never connected GSC while logged in.
+export async function getValidAccessTokenByUserId(userId) {
+  if (!sql || userId == null) return null;
+  try {
+    const rows = await sql`
+      SELECT session_id FROM gsc_tokens
+      WHERE user_id = ${userId} ORDER BY updated_at DESC LIMIT 1`;
+    return rows[0]?.session_id ? getValidAccessToken(rows[0].session_id) : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function deleteTokens(sessionId) {
   if (!sql || !sessionId) return;
   await sql`DELETE FROM gsc_tokens WHERE session_id = ${sessionId}`;

@@ -3,7 +3,8 @@
 
 import { cookies } from "next/headers";
 import { isGscConfigured, exchangeCode, redirectUri, emailFromIdToken } from "@/lib/gsc/oauth";
-import { saveTokens, newSessionId } from "@/lib/gsc/tokens";
+import { saveTokens, newSessionId, setTokenUser } from "@/lib/gsc/tokens";
+import { currentUser } from "@/lib/auth/session";
 
 function back(origin, params) {
   const url = new URL("/seo", origin);
@@ -34,6 +35,15 @@ export async function GET(request) {
     const sessionId = newSessionId();
     const saved = await saveTokens(sessionId, tokens, email);
     if (!saved) return back(origin, { error: "no_database" });
+
+    // Link this GSC session to the app user (if signed in) so background crons
+    // — e.g. the weekly digest — can reach GA/GSC by user_id later.
+    try {
+      const appUser = await currentUser();
+      if (appUser?.id) await setTokenUser(sessionId, appUser.id);
+    } catch {
+      /* not logged in / no DB — fine */
+    }
 
     jar.set("gsc_session", sessionId, {
       httpOnly: true,
