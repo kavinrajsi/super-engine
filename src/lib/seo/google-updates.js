@@ -8,12 +8,22 @@
 
 export const SOURCE_URL =
   "https://status.search.google.com/products/rGHU1u87FJnkP6W2GwMi/history";
-export const DATA_AS_OF = "June 2026";
+export const DATA_AS_OF = "July 2026";
 
 // type: "core" | "spam". `end` is start + the dashboard's reported duration.
 // `summary` is a plain-language note: categorical for routine core/spam updates,
 // with specifics only where well-documented.
 export const GOOGLE_UPDATES = [
+  {
+    name: "June 2026 Spam Update",
+    type: "spam",
+    start: "2026-06-24",
+    end: "2026-06-26",
+    duration: "2d 2h",
+    status: "Completed",
+    summary:
+      "Short spam update (≈2 days) enforcing Google's spam policies via SpamBrain — targeted content-level violations globally across all languages; no new spam policies were announced, and link spam and site-reputation abuse were not in scope.",
+  },
   {
     name: "May 2026 Core Update",
     type: "core",
